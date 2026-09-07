@@ -20,9 +20,12 @@ function PageContact({ quoteItems, removeQuoteItem }) {
     interests: [interests[0]],
     message: "",
     timeline: timelines[1],
+    website: "",           // honeypot — must stay empty
   });
-  const [errors, setErrors] = useState({});
-  const [sent, setSent]     = useState(false);
+  const [errors, setErrors]       = useState({});
+  const [sent, setSent]           = useState(false);
+  const [sending, setSending]     = useState(false);
+  const [sendError, setSendError] = useState("");
 
   // Honor sample-pack prefill from product page
   React.useEffect(() => {
@@ -53,7 +56,7 @@ function PageContact({ quoteItems, removeQuoteItem }) {
     }));
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const er = {};
     if (!form.name.trim()) er.name = t("common.required");
@@ -61,26 +64,31 @@ function PageContact({ quoteItems, removeQuoteItem }) {
     else if (!/^\S+@\S+\.\S+$/.test(form.email)) er.email = t("contact.email.invalid");
     if (!form.message.trim()) er.message = t("contact.field.message.err");
     setErrors(er);
-    if (Object.keys(er).length === 0) {
-      // Formspree-ready: replace FORMSPREE_ID with your form id (e.g. xqkrgvpb).
-      // For local/demo flow we just simulate success.
-      const FORMSPREE_ID = ""; // set to your form id when going live
-      if (FORMSPREE_ID && FORMSPREE_ID !== "FORMSPREE_ID") {
-        const fd = new FormData();
-        Object.entries(form).forEach(([k, v]) => {
-          fd.append(k, Array.isArray(v) ? v.join(", ") : v);
-        });
-        if (quoteItems && quoteItems.length) {
-          fd.append("quote", quoteItems.map(q => `${q.product.name} · ${q.color.name} · ${q.size.name} · ×${q.qty}`).join("\n"));
-        }
-        fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
-          method: "POST",
-          headers: { "Accept": "application/json" },
-          body: fd,
-        }).catch(() => {}); // fire & forget; UI shows success regardless for demo
+    if (Object.keys(er).length > 0) return;
+
+    setSendError("");
+    setSending(true);
+    try {
+      const payload = { ...form, interests: form.interests.join(", ") };
+      if (quoteItems && quoteItems.length) {
+        payload.quote = quoteItems
+          .map((q) => `${q.product.name} \u00b7 ${q.color.name} \u00b7 ${q.size.name} \u00b7 \u00d7${q.qty}`)
+          .join("\n");
       }
+      const res = await fetch("/contact.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const out = await res.json().catch(() => ({}));
+      // Only claim success once the server actually accepted the mail.
+      if (!res.ok || !out.ok) throw new Error(out.error || t("contact.send.err"));
       setSent(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setSendError(t("contact.send.err"));
+    } finally {
+      setSending(false);
     }
   };
 
@@ -229,14 +237,27 @@ function PageContact({ quoteItems, removeQuoteItem }) {
                 {errors.message && <span className="field__err">{errors.message}</span>}
               </Reveal>
 
+              {/* Honeypot: hidden from people, catnip for bots. */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                value={form.website}
+                onChange={update("website")}
+                style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+              />
+
               <Reveal style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-                <button type="submit" className="btn btn--primary">
-                  {t("contact.send")} <span className="arr">→</span>
+                <button type="submit" className="btn btn--primary" disabled={sending}>
+                  {sending ? t("contact.sending") : t("contact.send")} <span className="arr">→</span>
                 </button>
                 <span className="t-mono t-small" style={{ color: "var(--muted)" }}>
                   {t("contact.respond")}
                 </span>
               </Reveal>
+              {sendError && <span className="field__err">{sendError}</span>}
             </form>
 
             <aside style={{ display: "flex", flexDirection: "column", gap: 36 }}>
@@ -245,7 +266,7 @@ function PageContact({ quoteItems, removeQuoteItem }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <div>
                     <div className="t-mono t-small">{t("contact.direct.email")}</div>
-                    <a href="mailto:info@aquasignature.com" className="link-u" style={{ fontFamily: "var(--display)", fontSize: 22 }}>info@aquasignature.com</a>
+                    <a href="mailto:info@aquasignaturerd.com" className="link-u" style={{ fontFamily: "var(--display)", fontSize: 22 }}>info@aquasignaturerd.com</a>
                   </div>
                   <div style={{ marginTop: 14 }}>
                     <div className="t-mono t-small">{t("contact.direct.phone")}</div>

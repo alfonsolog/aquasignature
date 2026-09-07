@@ -203,7 +203,7 @@ function Footer({ navigate, onTradeLogin }) {
             <a href="#">Instagram</a>
             <a href="#">Pinterest</a>
             <a href="#">LinkedIn</a>
-            <a href="mailto:info@aquasignature.com">info@aquasignature.com</a>
+            <a href="mailto:info@aquasignaturerd.com">info@aquasignaturerd.com</a>
           </div>
         </div>
       </div>

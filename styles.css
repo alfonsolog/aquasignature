@@ -1032,14 +1032,40 @@ body:has(.nav.is-dark) .lang-switch { color: var(--paper); }
 /* Mobile collage */
 @media (max-width: 880px) {
   .hero__inner { grid-template-columns: 1fr; gap: 40px; }
-  .hero__top-mid { display: none; }
+  /* needs .hero__top in front: `.hero__top span { display: block }` above
+     is more specific than a bare .hero__top-mid and was winning here. */
+  .hero__top .hero__top-mid { display: none; }
   .hero__collage { min-height: 520px; }
   .hero__footnote { display: none; }
+}
+
+/* The meta strip is absolutely positioned on desktop. On phones its columns
+   wrap to three lines each and ran straight over the eyebrow and title
+   below. Put it back in normal flow so it can never overlap. */
+@media (max-width: 760px) {
+  .hero { padding-top: 88px; }
+  .hero__top {
+    position: static;
+    margin-bottom: 32px;
+    gap: 20px;
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+  }
+}
+@media (max-width: 520px) {
+  .hero__top {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  /* full width each, so neither wraps mid-phrase */
+  .hero__top span { white-space: nowrap; }
 }
 @media (max-width: 520px) {
   .hero__collage { min-height: 440px; }
   .hero__tile--1 { width: 70%; height: 64%; }
-  .hero__tile--2 { width: 50%; height: 42%; right: -4%; }
+  .hero__tile--2 { width: 50%; height: 42%; right: 0; }
   .hero__tile--3 { width: 44%; height: 32%; left: 18%; }
   .hero__tile--4 { width: 42%; height: 36%; right: 2%; }
   .hero__pieces { padding-left: 18px; }

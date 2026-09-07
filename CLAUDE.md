@@ -60,9 +60,11 @@ type="text/babel">` file and assign to `window`.
 
 ## Cache busting
 
-Both `styles.css` and `assets/logo.svg` are loaded with `?v=N` query
-strings. Bump the version when you change them or browser caching will
-bite.
+`styles.css`, `assets/logo.svg` and **every `.jsx` script tag** in
+`index.html` are loaded with a shared `?v=N` query string. Bump that
+one number whenever you change any of them, or browser caching will
+bite — the host sends no `cache-control` for `.jsx`, so browsers cache
+them heuristically and returning visitors keep running old code.
 
 ## Don't
 

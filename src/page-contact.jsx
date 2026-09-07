@@ -72,7 +72,7 @@ function PageContact({ quoteItems, removeQuoteItem }) {
       const payload = { ...form, interests: form.interests.join(", ") };
       if (quoteItems && quoteItems.length) {
         payload.quote = quoteItems
-          .map((q) => `${q.product.name} \u00b7 ${q.color.name} \u00b7 ${q.size.name} \u00b7 \u00d7${q.qty}`)
+          .map((q) => `${q.product.name} \u00b7 ${q.color.name} \u00b7 \u00d7${q.qty}`)
           .join("\n");
       }
       const res = await fetch("/contact.php", {
@@ -149,7 +149,7 @@ function PageContact({ quoteItems, removeQuoteItem }) {
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < quoteItems.length - 1 ? "1px solid var(--rule)" : "none", fontSize: 14 }}>
                         <div>
                           <div style={{ fontFamily: "var(--display)", fontSize: 18 }}>{q.product.name}</div>
-                          <div className="t-mono t-small">{q.color.name} · {q.size.name} · ×{q.qty}</div>
+                          <div className="t-mono t-small">{q.color.name} · ×{q.qty}</div>
                         </div>
                         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                           <span style={{ fontFamily: "var(--display)", fontSize: 18 }}>{format(q.total)}</span>

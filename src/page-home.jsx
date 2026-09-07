@@ -264,11 +264,7 @@ function getProducts(t) {
         { src: "assets/photos/tray-turquoise-breakfast.jpg", label: "05 · Breakfast", crop: "Morning ritual" },
         { src: "assets/photos/tray-aerial-sun.jpg",      label: "06 · Weave",         crop: "HDPE poly rattan · close" },
       ],
-      sizes: [
-        { id: "s", name: t("size.s.tray"), dim: "40 × 28 cm" },
-        { id: "m", name: t("size.m.tray"), dim: "50 × 35 cm" },
-        { id: "l", name: t("size.l.tray"), dim: "60 × 42 cm" },
-      ],
+      dim: "50 × 35 cm",
       colors: [
         { id: "natural", name: t("color.natural"), hex: "#D9C29B" },
         { id: "sand",    name: t("color.sand"),    hex: "#EFE3D0" },
@@ -296,11 +292,7 @@ function getProducts(t) {
         { src: "assets/photos/box-towel-drape.jpg",  label: "05 · Drape",         crop: "Lid detail · linen drape" },
         { src: "assets/photos/box-product.jpg",      label: "06 · Studio",        crop: "Studio finish" },
       ],
-      sizes: [
-        { id: "s", name: t("size.s.box"), dim: "55 × 40 × 45 cm" },
-        { id: "m", name: t("size.m.box"), dim: "70 × 50 × 50 cm" },
-        { id: "l", name: t("size.l.box"), dim: "90 × 55 × 50 cm" },
-      ],
+      dim: "70 × 50 × 50 cm",
       colors: [
         { id: "natural", name: t("color.natural"),  hex: "#D9C29B" },
         { id: "ocean",   name: t("color.ocean"),    hex: "#1A2E35" },
@@ -326,11 +318,7 @@ function getProducts(t) {
         { src: "assets/photos/bar-full-trays.jpg",     label: "04 · Full set", crop: "Bar + matching trays" },
         { src: "assets/photos/bar-product.jpg",        label: "05 · Studio",   crop: "Open bar configuration" },
       ],
-      sizes: [
-        { id: "s", name: t("size.s.bar"), dim: "120 × 55 × 105 cm" },
-        { id: "m", name: t("size.m.bar"), dim: "160 × 60 × 105 cm" },
-        { id: "l", name: t("size.l.bar"), dim: "200 × 65 × 110 cm" },
-      ],
+      dim: "160 × 60 × 105 cm",
       colors: [
         { id: "natural", name: t("color.natural"), hex: "#D9C29B" },
         { id: "ocean",   name: t("color.ocean"),   hex: "#1A2E35" },
@@ -371,7 +359,7 @@ function ProductCard({ product, num, navigate, t }) {
       </div>
       <p className="product-card__desc">{product.desc}</p>
       <div className="product-card__meta">
-        <span>{t("common.from")} RD$ {product.basePrice.toLocaleString("en-US")}</span>
+        <span>RD$ {product.basePrice.toLocaleString("en-US")}</span>
         <span>{t("common.view")} <span style={{ display: "inline-block", marginLeft: 4 }}>→</span></span>
       </div>
     </article>

@@ -183,7 +183,7 @@ function CollectionRow({ product, num, reverse, navigate, t, photoOverride }) {
             <button className="btn btn--primary" onClick={() => navigate(`/product/${product.id}`)}>
               {t("col.row.cta")} <span className="arr">→</span>
             </button>
-            <span className="t-mono" style={{ color: "var(--muted)" }}>{t("common.from")} {format(product.basePrice)}</span>
+            <span className="t-mono" style={{ color: "var(--muted)" }}>{format(product.basePrice)}</span>
           </Reveal>
         </div>
       </div>

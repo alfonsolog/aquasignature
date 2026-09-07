@@ -3,13 +3,12 @@
  * ------------------------------------------------------------------ */
 
 function PageProduct({ slug, navigate, onAddToQuote }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { format } = useCurrency();
   const { isTrade, applyDiscount, discount } = useTrade();
   const products = getProducts(t);
   const product = products.find((p) => p.id === slug) || products[0];
   const [color, setColor] = useState(product.colors[0]);
-  const [size, setSize]   = useState(product.sizes[1]);
   const [qty, setQty]     = useState(1);
   const [toast, setToast] = useState(false);
   const [shot, setShot]   = useState(0);
@@ -17,19 +16,16 @@ function PageProduct({ slug, navigate, onAddToQuote }) {
   // reset on product change
   useEffect(() => {
     setColor(product.colors[0]);
-    setSize(product.sizes[1]);
     setQty(1);
     setShot(0);
   }, [product.id]);
 
-  // keep selected color/size in sync with current language (preserve the selected id)
+  // keep the selected colour in sync with current language (preserve the selected id)
   useEffect(() => {
     setColor((c) => product.colors.find((x) => x.id === c.id) || product.colors[0]);
-    setSize((s) => product.sizes.find((x) => x.id === s.id) || product.sizes[1]);
-  }, [product]);
+  }, [product.id, lang]);
 
-  const sizeMult = { s: 1, m: 1.25, l: 1.55 };
-  const retailTotal = Math.round(product.basePrice * sizeMult[size.id] * qty);
+  const retailTotal = Math.round(product.basePrice * qty);
   const total = applyDiscount(retailTotal);
 
   const gallery = product.gallery && product.gallery.length
@@ -134,25 +130,6 @@ function PageProduct({ slug, navigate, onAddToQuote }) {
 
               <div className="cfg__group">
                 <h4>
-                  <span>{t("prod.size")}</span>
-                  <span>{size.dim}</span>
-                </h4>
-                <div className="cfg__sizes">
-                  {product.sizes.map((s) => (
-                    <button
-                      key={s.id}
-                      className={`cfg__size ${size.id === s.id ? "is-on" : ""}`}
-                      onClick={() => setSize(s)}
-                    >
-                      <span className="size-name">{s.name}</span>
-                      <span className="size-dim">{s.dim}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="cfg__group">
-                <h4>
                   <span>{t("prod.qty")}</span>
                   <span>{qty} {qty !== 1 ? t("common.units") : t("common.unit")}</span>
                 </h4>
@@ -176,7 +153,7 @@ function PageProduct({ slug, navigate, onAddToQuote }) {
                 <button
                   className="btn btn--primary"
                   onClick={() => {
-                    onAddToQuote && onAddToQuote({ product, color, size, qty, total });
+                    onAddToQuote && onAddToQuote({ product, color, qty, total });
                     setToast(true);
                     setTimeout(() => setToast(false), 2400);
                   }}
@@ -212,6 +189,10 @@ function PageProduct({ slug, navigate, onAddToQuote }) {
                   </li>
                 ))}
                 <li style={{ display: "flex", justifyContent: "space-between", padding: "16px 0", borderBottom: "1px solid var(--rule)", fontSize: 14 }}>
+                  <span style={{ color: "var(--muted)" }}>{t("prod.spec.dims")}</span>
+                  <span style={{ fontFamily: "var(--display)" }}>{product.dim}</span>
+                </li>
+                <li style={{ display: "flex", justifyContent: "space-between", padding: "16px 0", borderBottom: "1px solid var(--rule)", fontSize: 14 }}>
                   <span style={{ color: "var(--muted)" }}>{t("prod.spec.material")}</span>
                   <span style={{ fontFamily: "var(--display)" }}>{t("prod.spec.materialVal")}</span>
                 </li>
@@ -244,7 +225,7 @@ function PageProduct({ slug, navigate, onAddToQuote }) {
                   >
                     <span className="t-mono" style={{ color: "var(--muted)", fontSize: 10 }}>{p.tagline}</span>
                     <span style={{ fontFamily: "var(--display)", fontSize: 22 }}>{p.name}</span>
-                    <span className="t-mono t-small">{t("common.from")} {format(p.basePrice)} →</span>
+                    <span className="t-mono t-small">{format(p.basePrice)} →</span>
                   </button>
                 ))}
               </div>
@@ -253,7 +234,7 @@ function PageProduct({ slug, navigate, onAddToQuote }) {
         </div>
       </section>
 
-      <Toast show={toast} message={`${product.name} (${color.name}, ${size.name}) ${t("prod.toast")}`} />
+      <Toast show={toast} message={`${product.name} (${color.name}) ${t("prod.toast")}`} />
     </div>
   );
 }

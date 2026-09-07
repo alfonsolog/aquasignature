@@ -200,9 +200,7 @@ function Footer({ navigate, onTradeLogin }) {
         <div>
           <h4>{t("footer.connect")}</h4>
           <div className="footer__list">
-            <a href="#">Instagram</a>
-            <a href="#">Pinterest</a>
-            <a href="#">LinkedIn</a>
+            <a href="https://www.instagram.com/aquasignaturerd/" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="mailto:info@aquasignaturerd.com">info@aquasignaturerd.com</a>
           </div>
         </div>

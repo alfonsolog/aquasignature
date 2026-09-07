@@ -28,7 +28,6 @@ const DICT = {
     "logo.country": "Dominican Republic",
 
     // Common
-    "common.from": "From",
     "common.view": "View",
     "common.scroll": "Scroll",
     "common.previous": "Previous",
@@ -105,15 +104,6 @@ const DICT = {
     "p.bar.desc": "All-weather outdoor bar with aluminum frame and high-density poly rattan. Designed for entertaining.",
 
     // Sizes
-    "size.s.tray": "Small",
-    "size.m.tray": "Medium",
-    "size.l.tray": "Large",
-    "size.s.box": "Side",
-    "size.m.box": "Standard",
-    "size.l.box": "Lounge",
-    "size.s.bar": "Cocktail",
-    "size.m.bar": "Service",
-    "size.l.bar": "Resort",
 
     // Colors
     "color.natural": "Caribbean Natural",
@@ -166,7 +156,6 @@ const DICT = {
     // Product page
     "prod.crumb": "Collection",
     "prod.finish": "Finish",
-    "prod.size": "Size",
     "prod.qty": "Quantity",
     "prod.estimate": "Estimated · USD",
     "prod.add": "Add to Quote",
@@ -174,6 +163,7 @@ const DICT = {
     "prod.lead": "Lead time: 2–4 weeks from order. Volume pricing applies from 10 units. Custom finishes on request for orders over 50 units.",
     "prod.spec": "— Specifications",
     "prod.spec.feature": "Feature",
+    "prod.spec.dims": "Dimensions",
     "prod.spec.material": "Material",
     "prod.spec.materialVal": "HDPE Poly Rattan",
     "prod.spec.origin": "Origin",
@@ -395,7 +385,6 @@ const DICT = {
     "logo.country": "República Dominicana",
 
     // Common
-    "common.from": "Desde",
     "common.view": "Ver",
     "common.scroll": "Desliza",
     "common.previous": "Anterior",
@@ -472,15 +461,6 @@ const DICT = {
     "p.bar.desc": "Bar de exterior para todo clima con estructura de aluminio y poly ratán de alta densidad. Pensado para recibir.",
 
     // Sizes
-    "size.s.tray": "Pequeña",
-    "size.m.tray": "Mediana",
-    "size.l.tray": "Grande",
-    "size.s.box": "Auxiliar",
-    "size.m.box": "Estándar",
-    "size.l.box": "Lounge",
-    "size.s.bar": "Cocktail",
-    "size.m.bar": "Servicio",
-    "size.l.bar": "Resort",
 
     // Colors
     "color.natural": "Natural Caribeño",
@@ -533,7 +513,6 @@ const DICT = {
     // Product page
     "prod.crumb": "Colección",
     "prod.finish": "Acabado",
-    "prod.size": "Tamaño",
     "prod.qty": "Cantidad",
     "prod.estimate": "Estimado · USD",
     "prod.add": "Agregar a Cotización",
@@ -541,6 +520,7 @@ const DICT = {
     "prod.lead": "Tiempo de entrega: 2–4 semanas desde la orden. Precios por volumen aplican desde 10 unidades. Acabados personalizados sobre pedido para órdenes de más de 50 unidades.",
     "prod.spec": "— Especificaciones",
     "prod.spec.feature": "Característica",
+    "prod.spec.dims": "Dimensiones",
     "prod.spec.material": "Material",
     "prod.spec.materialVal": "Poly Ratán HDPE",
     "prod.spec.origin": "Origen",

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aqua Signature — Logo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Allura&display=swap">
+  <style>
+    html, body { margin: 0; padding: 0; background: #FAFBFB; overflow: hidden; }
+    body { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+    .drop { width: 150px; height: 180px; flex-shrink: 0; }
+    .wm {
+      display: flex;
+      flex-direction: column;
+      line-height: 0.95;
+    }
+    .aqua {
+      font-family: "Cinzel", serif;
+      font-weight: 600;
+      font-size: 84px;
+      letter-spacing: 0.10em;
+      color: #1B96A8;
+      margin: 0;
+    }
+    .sig {
+      font-family: "Allura", cursive;
+      font-size: 120px;
+      color: #2FAFC9;
+      margin-top: -32px;
+      line-height: 1;
+    }
+    .country {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 14px;
+      letter-spacing: 0.36em;
+      text-transform: uppercase;
+      color: #5C6B72;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+      <svg class="drop" viewBox="0 0 64 76" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="dg" x1="32" y1="2" x2="32" y2="74" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9FE3F0"/>
+            <stop offset="35%" stop-color="#5CC4DA"/>
+            <stop offset="70%" stop-color="#1B96A8"/>
+            <stop offset="100%" stop-color="#0A4D5A"/>
+          </linearGradient>
+          <radialGradient id="shine" cx="42%" cy="32%" r="22%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.9)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+        </defs>
+        <path d="M32 2 C32 2, 56 30, 56 50 C56 64, 45 74, 32 74 C19 74, 8 64, 8 50 C8 30, 32 2, 32 2 Z" fill="url(#dg)"/>
+        <ellipse cx="26" cy="22" rx="6" ry="9" fill="url(#shine)"/>
+      </svg>
+      <div class="wm">
+        <span class="aqua">AQUA</span>
+        <span class="sig">Signature</span>
+        <span class="country">Dominican Republic</span>
+      </div>
+    </div>
+</body>
+</html>

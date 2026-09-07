@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aqua Signature — Brand Book 2026</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allura&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+  <style>
+    :root {
+      --aqua-light: #6FCFE3;
+      --aqua: #2FAFC9;
+      --teal: #1B96A8;
+      --teal-deep: #0E6E80;
+      --aqua-pale: #DCF2F6;
+      --sand: #F5EDE0;
+      --sand-warm: #EFE3D0;
+      --ocean: #0A2A33;
+      --ocean-soft: #14424E;
+      --paper: #FAFBFB;
+      --slate: #5C6B72;
+      --display: "Cormorant Garamond", serif;
+      --caps: "Cinzel", serif;
+      --script: "Allura", cursive;
+      --body: "Inter", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #1a1a1a; color: var(--ocean); font-family: var(--body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    img { display: block; max-width: 100%; }
+
+    /* Each page is a fixed A4 portrait */
+    .page {
+      width: 210mm;
+      height: 297mm;
+      margin: 24px auto;
+      background: var(--paper);
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+      break-after: page;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+    .page:last-child { page-break-after: auto; break-after: auto; }
+
+    /* page header strip (running header) */
+    .page__hdr {
+      position: absolute;
+      top: 10mm;
+      left: 14mm;
+      right: 14mm;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--slate);
+      z-index: 5;
+    }
+    .page__hdr--inv { color: rgba(255,255,255,0.65); }
+    .page__num {
+      position: absolute;
+      bottom: 10mm;
+      left: 14mm;
+      right: 14mm;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--slate);
+      z-index: 5;
+    }
+    .page__num--inv { color: rgba(255,255,255,0.65); }
+
+    /* ============================================
+       COVER PAGE
+       ============================================ */
+    .cover {
+      background: var(--ocean);
+      color: var(--paper);
+      padding: 0;
+    }
+    .cover__bg {
+      position: absolute;
+      inset: 0;
+      background: url("assets/photos/tray-hero-woman.jpg") center/cover no-repeat;
+      filter: brightness(0.7);
+    }
+    .cover__bg::after {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, rgba(5,26,34,0.4) 0%, rgba(5,26,34,0.55) 100%);
+    }
+    .cover > * { position: relative; z-index: 2; color: var(--paper); }
+    .cover__inner {
+      position: absolute;
+      inset: 14mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .cover__top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.85;
+      color: var(--paper);
+    }
+    .cover__brand {
+      align-self: center;
+      text-align: center;
+      margin-top: 60mm;
+    }
+    .cover__brand svg {
+      width: 54px; height: 64px;
+      filter: drop-shadow(0 2px 12px rgba(0,0,0,0.4));
+    }
+    .cover__aqua {
+      display: block;
+      font-family: var(--caps);
+      font-weight: 600;
+      font-size: 56px;
+      letter-spacing: 0.12em;
+      color: var(--aqua-pale);
+      margin-top: 10px;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    }
+    .cover__sig {
+      display: block;
+      font-family: var(--script);
+      font-size: 76px;
+      color: var(--aqua-light);
+      margin-top: -16px;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    }
+    .cover__country {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--paper);
+      margin-top: 18px;
+      opacity: 0.85;
+    }
+    .cover__bottom {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .cover__title {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: 42px;
+      line-height: 1.05;
+      color: var(--paper);
+      max-width: 24ch;
+      margin: 0;
+    }
+    .cover__title em {
+      font-family: var(--script);
+      font-style: normal;
+      color: var(--aqua-light);
+      font-size: 1.15em;
+      line-height: 0.6;
+    }
+    .cover__sub {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--aqua-pale);
+      opacity: 0.85;
+    }
+
+    /* ============================================
+       CONTENT PAGES (paper background)
+       ============================================ */
+    .content {
+      padding: 22mm 18mm 18mm;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 10mm;
+    }
+    .content__intro {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--teal-deep);
+    }
+    .title {
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: 48px;
+      line-height: 1;
+      margin: 4px 0 0;
+      letter-spacing: -0.01em;
+    }
+    .title em {
+      font-family: var(--script);
+      font-style: normal;
+      color: var(--aqua);
+      font-size: 1.15em;
+      line-height: 0.6;
+    }
+    .lead {
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--ocean-soft);
+      max-width: 58ch;
+    }
+    .body-copy {
+      font-size: 10.5px;
+      line-height: 1.7;
+      color: var(--ocean-soft);
+    }
+    .body-copy p { margin: 0 0 10px; max-width: 60ch; }
+
+    /* ============================================
+       PRODUCT SPREAD
+       ============================================ */
+    .product {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 8mm;
+      align-items: stretch;
+    }
+    .product__hero {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 200mm;
+      overflow: hidden;
+      background: var(--ocean);
+    }
+    .product__hero img { width: 100%; height: 100%; object-fit: cover; }
+    .product__side {
+      display: flex;
+      flex-direction: column;
+      gap: 6mm;
+    }
+    .product__name {
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: 56px;
+      line-height: 0.95;
+      letter-spacing: -0.015em;
+      margin: 0;
+    }
+    .product__name em {
+      font-family: var(--script);
+      font-style: normal;
+      color: var(--aqua);
+      font-size: 1.15em;
+      line-height: 0.6;
+    }
+    .product__tag {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 18px;
+      color: var(--teal-deep);
+      margin: 0;
+    }
+    .product__desc {
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--ocean-soft);
+      margin: 0;
+    }
+    .product__spec {
+      display: flex;
+      flex-direction: column;
+    }
+    .product__spec h4 {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin: 0 0 6px;
+      font-weight: 500;
+    }
+    .product__feat {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .product__feat li {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(10,42,51,0.1);
+      font-size: 10.5px;
+      color: var(--ocean);
+    }
+    .product__feat li::before {
+      content: "—";
+      color: var(--aqua);
+    }
+    .product__sizes {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .product__size {
+      padding: 8px;
+      border: 1px solid rgba(10,42,51,0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .product__size-name {
+      font-family: var(--display);
+      font-size: 14px;
+    }
+    .product__size-dim {
+      font-family: var(--mono);
+      font-size: 7.5px;
+      letter-spacing: 0.12em;
+      color: var(--slate);
+      text-transform: uppercase;
+    }
+    .product__price {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding-top: 8px;
+      border-top: 1px solid var(--ocean);
+      margin-top: auto;
+    }
+    .product__price-lbl {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--slate);
+    }
+    .product__price-val {
+      font-family: var(--display);
+      font-size: 26px;
+    }
+    .product__minis {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4mm;
+    }
+    .product__mini {
+      aspect-ratio: 1;
+      overflow: hidden;
+      background: var(--ocean);
+    }
+    .product__mini img { width: 100%; height: 100%; object-fit: cover; }
+    .product__ideal {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .product__ideal span {
+      padding: 4px 10px;
+      border: 1px solid rgba(10,42,51,0.2);
+      font-size: 9px;
+      font-family: var(--display);
+    }
+
+    /* ============================================
+       PAGE 3 — COLLECTION OVERVIEW (3 photos)
+       ============================================ */
+    .overview {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 10mm;
+      height: 100%;
+    }
+    .overview__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4mm;
+    }
+    .overview__item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .overview__photo {
+      aspect-ratio: 4/5;
+      overflow: hidden;
+      background: var(--ocean);
+    }
+    .overview__photo img { width: 100%; height: 100%; object-fit: cover; }
+    .overview__no {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--slate);
+    }
+    .overview__name {
+      font-family: var(--display);
+      font-size: 24px;
+      line-height: 1;
+      margin: 0;
+    }
+    .overview__name em {
+      font-family: var(--script);
+      font-style: normal;
+      color: var(--aqua);
+      font-size: 1.05em;
+    }
+    .overview__desc {
+      font-size: 9.5px;
+      line-height: 1.55;
+      color: var(--ocean-soft);
+      margin: 0;
+    }
+
+    /* ============================================
+       MATERIALS PAGE
+       ============================================ */
+    .materials {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 8mm;
+      height: 100%;
+    }
+    .materials__photo {
+      width: 100%;
+      height: 95mm;
+      overflow: hidden;
+      background: var(--ocean);
+    }
+    .materials__photo img { width: 100%; height: 100%; object-fit: cover; }
+    .materials__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 1px;
+      background: rgba(10,42,51,0.1);
+      border-top: 1px solid rgba(10,42,51,0.1);
+      border-bottom: 1px solid rgba(10,42,51,0.1);
+    }
+    .materials__cell {
+      background: var(--paper);
+      padding: 6mm 4mm;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .materials__cell h5 {
+      font-family: var(--display);
+      font-size: 14px;
+      margin: 0;
+      line-height: 1.05;
+    }
+    .materials__cell p {
+      font-size: 8.5px;
+      line-height: 1.55;
+      color: var(--slate);
+      margin: 0;
+    }
+    .materials__cell span {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--aqua);
+    }
+
+    /* ============================================
+       BACK COVER / CONTACT
+       ============================================ */
+    .back {
+      background: var(--ocean);
+      color: var(--paper);
+      padding: 22mm 18mm 18mm;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14mm;
+    }
+    .back__title {
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: 56px;
+      line-height: 1;
+      margin: 0;
+      color: var(--paper);
+    }
+    .back__title em {
+      font-family: var(--script);
+      font-style: normal;
+      color: var(--aqua-light);
+      font-size: 1.15em;
+      line-height: 0.6;
+    }
+    .back__motto {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 22px;
+      line-height: 1.3;
+      color: var(--aqua-pale);
+      max-width: 24ch;
+      margin: 0;
+    }
+    .back__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8mm;
+      padding-top: 12mm;
+      border-top: 1px solid rgba(255,255,255,0.18);
+    }
+    .back__col h4 {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--aqua-light);
+      margin: 0 0 8px;
+      font-weight: 500;
+    }
+    .back__col p {
+      font-size: 10px;
+      line-height: 1.6;
+      margin: 0;
+      color: var(--paper);
+      opacity: 0.85;
+    }
+    .back__col p strong {
+      font-family: var(--display);
+      font-style: italic;
+      font-weight: 500;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 2px;
+      opacity: 1;
+      color: var(--paper);
+    }
+    .back__brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 12mm;
+      padding-top: 12mm;
+      border-top: 1px solid rgba(255,255,255,0.18);
+    }
+    .back__brand svg { width: 32px; height: 38px; }
+    .back__wm {
+      display: flex;
+      flex-direction: column;
+      line-height: 0.95;
+    }
+    .back__aqua {
+      font-family: var(--caps);
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: 0.12em;
+      color: var(--aqua-pale);
+    }
+    .back__sig {
+      font-family: var(--script);
+      font-size: 24px;
+      color: var(--aqua-light);
+      margin-top: -6px;
+    }
+
+    /* Print rules */
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+    @media print {
+      html, body { background: #fff; }
+      .page { margin: 0; box-shadow: none; }
+    }
+
+    /* ============================================
+       NEW EDITORIAL SPREAD LAYOUTS
+       ============================================ */
+
+    /* Full-bleed quote page */
+    .bleed {
+      position: relative;
+      padding: 0;
+      overflow: hidden;
+    }
+    .bleed__img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .bleed__shade {
+      position: absolute; inset: 0;
+      background: linear-gradient(160deg, rgba(2,16,26,0.28) 0%, rgba(5,26,34,0.62) 50%, rgba(2,16,26,0.88) 100%);
+    }
+    .bleed__inner {
+      position: absolute; inset: 0;
+      padding: 22mm 18mm 18mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: var(--paper);
+      z-index: 2;
+    }
+    .bleed__eyebrow {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--aqua-light);
+      opacity: 0.85;
+    }
+    .bleed__quote {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 44px;
+      line-height: 1.15;
+      max-width: 22ch;
+      margin: 0 0 8mm;
+      color: var(--paper);
+      text-shadow: 0 2px 18px rgba(0,0,0,0.45);
+    }
+    .bleed__attr {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.78;
+    }
+
+    /* Lookbook mosaic spread (revised — 10-cell richer grid) */
+    .mosaic {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 3mm;
+      width: 100%;
+      height: 100%;
+    }
+    .mosaic__cell { overflow: hidden; background: var(--ocean); position: relative; }
+    .mosaic__cell img { width: 100%; height: 100%; object-fit: cover; object-position: center 38%; display: block; }
+    .mosaic__cell--a { grid-column: 1 / 4; grid-row: 1 / 4; }
+    .mosaic__cell--b { grid-column: 4 / 7; grid-row: 1 / 3; }
+    .mosaic__cell--c { grid-column: 4 / 6; grid-row: 3 / 5; }
+    .mosaic__cell--d { grid-column: 6 / 7; grid-row: 3 / 5; }
+    .mosaic__cell--e { grid-column: 1 / 3; grid-row: 4 / 7; }
+    .mosaic__cell--f { grid-column: 3 / 5; grid-row: 5 / 7; }
+    .mosaic__cell--g { grid-column: 5 / 7; grid-row: 5 / 7; }
+    .mosaic__cell--h { grid-column: 1 / 3; grid-row: 7 / 9; }
+    .mosaic__cell--i { grid-column: 3 / 5; grid-row: 7 / 9; }
+    .mosaic__cell--j { grid-column: 5 / 7; grid-row: 7 / 9; }
+
+    /* Atmospheres — alternate lookbook layout */
+    .atmos {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr 1fr;
+      grid-template-rows: repeat(3, 1fr);
+      gap: 3mm;
+      width: 100%;
+      height: 100%;
+    }
+    .atmos__cell { overflow: hidden; background: var(--ocean); position: relative; }
+    .atmos__cell img { width: 100%; height: 100%; object-fit: cover; object-position: center 38%; display: block; }
+    .atmos__cell--lead { grid-column: 1 / 2; grid-row: 1 / 4; }
+    .atmos__cell--b { grid-column: 2 / 3; grid-row: 1 / 2; }
+    .atmos__cell--c { grid-column: 3 / 4; grid-row: 1 / 2; }
+    .atmos__cell--d { grid-column: 2 / 4; grid-row: 2 / 3; }
+    .atmos__cell--e { grid-column: 2 / 3; grid-row: 3 / 4; }
+    .atmos__cell--f { grid-column: 3 / 4; grid-row: 3 / 4; }
+    .atmos__cap {
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      right: 8px;
+      font-family: var(--mono);
+      font-size: 7px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--paper);
+      opacity: 0.85;
+      display: flex;
+      justify-content: space-between;
+    }
+    .atmos__cap i {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 10px;
+      letter-spacing: 0;
+      color: var(--aqua-light);
+      text-transform: none;
+    }
+
+    /* "In the field" spread — full-bleed photo top, info bar below */
+    .field-spread {
+      padding: 0;
+      display: grid;
+      grid-template-rows: 1fr auto;
+    }
+    .field-spread__photo {
+      position: relative;
+      overflow: hidden;
+      background: var(--ocean);
+    }
+    .field-spread__photo img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .field-spread__caption {
+      position: absolute;
+      bottom: 12mm;
+      left: 14mm; right: 14mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 14mm;
+      color: var(--paper);
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    }
+    .field-spread__title {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 36px;
+      line-height: 1;
+      margin: 0;
+      max-width: 14ch;
+    }
+    .field-spread__meta {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-align: right;
+      opacity: 0.85;
+      line-height: 1.7;
+    }
+    .field-spread__strip {
+      padding: 8mm 18mm 8mm;
+      background: var(--paper);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8mm;
+      border-top: 1px solid rgba(10,42,51,0.12);
+    }
+    .field-spread__strip-item h5 {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--teal-deep);
+      margin: 0 0 6px;
+      font-weight: 500;
+    }
+    .field-spread__strip-item p {
+      font-size: 10px;
+      line-height: 1.6;
+      color: var(--ocean-soft);
+      margin: 0;
+    }
+
+    /* Closing 2x2 grid */
+    .grid-quad {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 4mm;
+      height: 100%;
+    }
+    .grid-quad__cell {
+      position: relative;
+      overflow: hidden;
+      background: var(--ocean);
+    }
+    .grid-quad__cell img { width: 100%; height: 100%; object-fit: cover; }
+    .grid-quad__cell-cap {
+      position: absolute;
+      bottom: 8px;
+      left: 10px;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--paper);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      opacity: 0.85;
+    }
+  </style>
+  <template id="__bundler_thumbnail">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+      <rect width="200" height="200" fill="#0A2A33"/>
+      <text x="100" y="92" text-anchor="middle" font-family="serif" font-size="38" fill="#DCF2F6" font-style="italic">Aqua</text>
+      <text x="100" y="130" text-anchor="middle" font-family="cursive" font-size="32" fill="#6FCFE3">Signature</text>
+    </svg>
+  </template>
+</head>
+<body>
+
+  <!-- PAGE 1 — COVER -->
+  <div class="page cover">
+    <div class="cover__bg"></div>
+    <div class="cover__inner">
+      <div class="cover__top">
+        <span>Brand Book · Volume One</span>
+        <span>2026 Collection</span>
+      </div>
+      <div class="cover__brand">
+        <svg viewBox="0 0 64 76" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dg" x1="32" y1="2" x2="32" y2="74" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#DCF2F6"/>
+              <stop offset="35%" stop-color="#9FE3F0"/>
+              <stop offset="70%" stop-color="#5CC4DA"/>
+              <stop offset="100%" stop-color="#0E6E80"/>
+            </linearGradient>
+          </defs>
+          <path d="M32 2 C32 2, 56 30, 56 50 C56 64, 45 74, 32 74 C19 74, 8 64, 8 50 C8 30, 32 2, 32 2 Z" fill="url(#dg)"/>
+          <ellipse cx="26" cy="22" rx="6" ry="9" fill="rgba(255,255,255,0.85)"/>
+        </svg>
+        <span class="cover__aqua">AQUA</span>
+        <span class="cover__sig">Signature</span>
+        <span class="cover__country">Dominican Republic</span>
+      </div>
+      <div class="cover__bottom">
+        <h1 class="cover__title">Designed for the sun.<br/><em>Crafted</em> for life.</h1>
+        <span class="cover__sub">— Floating Editions · Brand &amp; Collection Book —</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2 — MANIFESTO / FULL-BLEED QUOTE -->
+  <div class="page bleed">
+    <img class="bleed__img" src="assets/photos/tray-fruits-aerial.jpg" alt="" />
+    <div class="bleed__shade"></div>
+    <div class="bleed__inner">
+      <span class="bleed__eyebrow">— Manifesto</span>
+      <div>
+        <h2 class="bleed__quote">"Designed for the sun.<br/>Crafted for life."</h2>
+        <span class="bleed__attr">— Aqua Signature · Dominican Republic</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-family: var(--mono); font-size: 8px; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.65;">
+        <span>— 02 —</span>
+        <span>aquasignature.com</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2 — OPENING / STORY -->
+  <div class="page">
+    <div class="page__hdr">
+      <span>Aqua Signature · 2026</span>
+      <span>01 / Our Story</span>
+    </div>
+    <div class="content">
+      <div class="content__intro">
+        <span class="eyebrow">— Our Story</span>
+        <h1 class="title">Born from the Caribbean.<br/><em>Built</em> for it.</h1>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 8mm; align-items: stretch;">
+        <div class="body-copy">
+          <p>Aqua Signature was founded in the Dominican Republic with one clear purpose: to bring premium outdoor living products to the vibrant Caribbean lifestyle.</p>
+          <p>We saw a gap — beautiful poolside spaces deserved accessories as elegant as their surroundings. Our answer was a curated collection of poly rattan pieces engineered for the tropics: resistant to sun, water, salt, and humidity — without sacrificing style.</p>
+          <p>We are not just selling products. We are selling an experience — the feeling of effortless, elevated Caribbean living.</p>
+          <p style="margin-top: 20px; font-family: var(--display); font-style: italic; font-size: 16px; color: var(--teal-deep);">"We don't sell furniture. We sell the feeling of a Tuesday afternoon at the pool."</p>
+          <p style="font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--slate);">— Maud Letellier, Founder</p>
+        </div>
+        <div style="overflow: hidden; background: var(--ocean);">
+          <img src="assets/photos/tray-charcuterie.jpg" alt="Aqua Tray charcuterie" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>
+      </div>
+    </div>
+    <div class="page__num">
+      <span>— 02 —</span>
+      <span>aquasignature.com</span>
+    </div>
+  </div>
+
+  <!-- PAGE 3 — COLLECTION OVERVIEW -->
+  <div class="page">
+    <div class="page__hdr">
+      <span>Aqua Signature · 2026</span>
+      <span>02 / The Collection</span>
+    </div>
+    <div class="content">
+      <div class="content__intro">
+        <span class="eyebrow">— The Collection</span>
+        <h1 class="title">Three pieces.<br/><em>One climate.</em></h1>
+        <p class="lead" style="margin-top: 10px;">A focused range, considered in proportion to one another. Tray, box, and bar — built from the same weave, designed to live together.</p>
+      </div>
+      <div class="overview__grid">
+        <div class="overview__item">
+          <div class="overview__photo"><img src="assets/photos/tray-hero-woman.jpg" alt="Aqua Tray" /></div>
+          <span class="overview__no">01 / Floating Tray</span>
+          <h3 class="overview__name">Aqua <em>Tray</em></h3>
+          <p class="overview__desc">The poolside essential. Lightweight, waterproof, designed to float.</p>
+        </div>
+        <div class="overview__item">
+          <div class="overview__photo"><img src="assets/photos/box-woman-open.jpg" alt="Aqua Box" /></div>
+          <span class="overview__no">02 / Storage</span>
+          <h3 class="overview__name">Aqua <em>Box</em></h3>
+          <p class="overview__desc">Weatherproof storage that doubles as a side table. Function and beauty in one.</p>
+        </div>
+        <div class="overview__item">
+          <div class="overview__photo"><img src="assets/photos/bar-archway.jpg" alt="Aqua Bar" /></div>
+          <span class="overview__no">03 / Entertain</span>
+          <h3 class="overview__name">Aqua <em>Bar</em></h3>
+          <p class="overview__desc">All-weather outdoor bar with aluminum frame &amp; HDPE rattan. Built to host.</p>
+        </div>
+      </div>
+    </div>
+    <div class="page__num">
+      <span>— 03 —</span>
+      <span>aquasignature.com</span>
+    </div>
+  </div>
+
+  <!-- PAGE 4 — AQUA TRAY -->
+  <div class="page">
+    <div class="page__hdr">
+      <span>The Collection · 01</span>
+      <span>Aqua Tray · Floating Service</span>
+    </div>
+    <div class="content">
+      <div class="product">
+        <div class="product__hero">
+          <img src="assets/photos/tray-hero-woman.jpg" alt="Aqua Tray poolside" />
+        </div>
+        <div class="product__side">
+          <span class="eyebrow">01 / The Poolside Essential</span>
+          <h2 class="product__name">Aqua <em>Tray</em></h2>
+          <p class="product__tag">"The morning ritual, served."</p>
+          <p class="product__desc">A floating and poolside serving tray in premium poly rattan weave. Lightweight, sturdy, fully waterproof. Designed for pool loungers, sun beds, and terrace tables.</p>
+
+          <div class="product__minis">
+            <div class="product__mini"><img src="assets/photos/tray-turquoise-empty.jpg" alt="Turquoise"/></div>
+            <div class="product__mini"><img src="assets/photos/tray-charcuterie.jpg" alt="Service"/></div>
+          </div>
+
+          <div class="product__spec">
+            <h4>— Features</h4>
+            <ul class="product__feat">
+              <li>Waterproof &amp; UV-resistant</li>
+              <li>Non-slip base coating</li>
+              <li>Easy-clean surface</li>
+              <li>Stackable design</li>
+            </ul>
+          </div>
+          </div>
+
+          <div class="product__spec">
+            <h4>— Ideal For</h4>
+            <div class="product__ideal">
+              <span>Hotels</span><span>Resorts</span><span>Private Villas</span><span>Beach Clubs</span>
+            </div>
+          </div>
+
+          <div class="product__price">
+            <span class="product__price-lbl">From · DOP</span>
+            <span class="product__price-val">RD$13,500</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page__num">
+      <span>— 04 —</span>
+      <span>aquasignature.com</span>
+    </div>
+  </div>
+
+  <!-- PAGE 5 — AQUA BOX -->
+  <div class="page">
+    <div class="page__hdr">
+      <span>The Collection · 02</span>
+      <span>Aqua Box · Storage Meets Style</span>
+    </div>
+    <div class="content">
+      <div class="product">
+        <div class="product__hero">
+          <img src="assets/photos/box-woman-open.jpg" alt="Aqua Box" />
+        </div>
+        <div class="product__side">
+          <span class="eyebrow">02 / Storage Meets Style</span>
+          <h2 class="product__name">Aqua <em>Box</em></h2>
+          <p class="product__tag">"Tucked away. Always in reach."</p>
+          <p class="product__desc">Weatherproof poly rattan storage that doubles as a side table — function and beauty in one. Holds towels, accessories, and pool essentials with a hinged lid and internal waterproof lining.</p>
+
+          <div class="product__minis">
+            <div class="product__mini"><img src="assets/photos/box-poolside.jpg" alt="Poolside"/></div>
+            <div class="product__mini"><img src="assets/photos/box-towel-load.jpg" alt="Loaded"/></div>
+          </div>
+
+          <div class="product__spec">
+            <h4>— Features</h4>
+            <ul class="product__feat">
+              <li>Weatherproof hinged lid</li>
+              <li>Internal waterproof lining</li>
+              <li>Doubles as side table</li>
+              <li>Holds up to 30kg</li>
+            </ul>
+          </div>
+          </div>
+
+          <div class="product__spec">
+            <h4>— Ideal For</h4>
+            <div class="product__ideal">
+              <span>Pool Decks</span><span>Spa Areas</span><span>Terrace Lounges</span><span>Beach Fronts</span>
+            </div>
+          </div>
+
+          <div class="product__price">
+            <span class="product__price-lbl">From · DOP</span>
+            <span class="product__price-val">RD$17,500</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page__num">
+      <span>— 05 —</span>
+      <span>aquasignature.com</span>
+    </div>
+  </div>
+
+  <!-- PAGE 6 — AQUA BAR -->
+  <div class="page">
+    <div class="page__hdr">
+      <span>The Collection · 03</span>
+      <span>Aqua Bar · Entertain with Elegance</span>
+    </div>
+    <div class="content">
+      <div class="product">
+        <div class="product__hero">
+          <img src="assets/photos/bar-archway.jpg" alt="Aqua Bar" />
+        </div>
+        <div class="product__side">
+          <span class="eyebrow">03 / Entertain with Elegance</span>
+          <h2 class="product__name">Aqua <em>Bar</em></h2>
+          <p class="product__tag">"For evenings that linger."</p>
+          <p class="product__desc">An all-weather outdoor bar with aluminum frame wrapped in high-density poly rattan. Designed for entertaining — pool parties, terraces, rooftop events.</p>
+
+          <div class="product__minis">
+            <div class="product__mini"><img src="assets/photos/bar-detail.jpg" alt="Detail"/></div>
+            <div class="product__mini"><img src="assets/photos/bar-full-trays.jpg" alt="Full set"/></div>
+          </div>
+
+          <div class="product__spec">
+            <h4>— Features</h4>
+            <ul class="product__feat">
+              <li>Aluminum structural frame</li>
+              <li>All-weather rattan finish</li>
+              <li>Built-in bottle storage</li>
+              <li>Footrest rail included</li>
+            </ul>
+          </div>
+          </div>
+
+          <div class="product__spec">
+            <h4>— Ideal For</h4>
+            <div class="product__ideal">
+              <span>Luxury Villas</span><span>Resort Pools</span><span>Rooftop Bars</span><span>Event Spaces</span>
+            </div>
+          </div>
+
+          <div class="product__price">
+            <span class="product__price-lbl">From · DOP</span>
+            <span class="product__price-val">RD$27,500</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page__num">
+      <span>— 06 —</span>
+      <span>aquasignature.com</span>
+    </div>
+  </div>
+
+  <!-- FIELD SPREAD — TURQUOISE EDITION -->
+  <div class="page field-spread">
+    <div class="page__hdr page__hdr--inv">
+      <span>Aqua Signature · 2026</span>
+      <span>Editorial / Turquoise</span>
+    </div>
+    <div class="field-spread__photo">
+      <img src="assets/photos/tray-turquoise-woman.jpg" alt="" />
+      <div class="field-spread__caption">
+        <h2 class="field-spread__title">A morning at <em>Cap Cana.</em></h2>
+        <div class="field-spread__meta">
+          Edition · 02<br/>
+          06:42 · Punta Cana
+        </div>
+      </div>
+    </div>
+    <div class="field-spread__strip">
+      <div class="field-spread__strip-item">
+        <h5>— Setting</h5>
+        <p>Private villa pool deck, oriented east to catch first light.</p>
+      </div>
+      <div class="field-spread__strip-item">
+        <h5>— Featured</h5>
+        <p>Aqua Tray in Turquoise. Custom finish, available for orders over 50 units.</p>
+      </div>
+      <div class="field-spread__strip-item">
+        <h5>— Service</h5>
+        <p>Coffee, tropical fruit, an hour of quiet — the Caribbean morning ritual.</p>
+      </div>
+    </div>
+    <div class="page__num">
+      <span>— 07 —</span>
+      <span>aquasignature.com</span>
+    </div>
+  </div>
+
+  <!-- PAGE 7 — MATERIALS -->
+  <div class="page">
+    <div class="page__hdr">
+      <span>Aqua Signature · 2026</span>
+      <span>03 / Materials &amp; Innovation</span>
+    </div>
+    <div class="content">
+      <div class="materials">
+        <div class="content__intro">
+          <span class="eyebrow">— Materials &amp; Innovation</span>
+          <h1 class="title">Engineered to <em>thrive</em><br/>where others fade.</h1>
+        </div>
+        <div class="materials__photo">
+          <img src="assets/photos/tray-turquoise-empty.jpg" alt="Material detail" />
+        </div>
+        <div class="materials__grid">
+          <div class="materials__cell">
+            <span>01</span>
+            <h5>UV Resistance</h5>
+            <p>Color stays vibrant after years of direct Caribbean sun.</p>
+          </div>
+          <div class="materials__cell">
+            <span>02</span>
+            <h5>Waterproof</h5>
+            <p>100% impervious to pool splash, rain, or sea breeze.</p>
+          </div>
+          <div class="materials__cell">
+            <span>03</span>
+            <h5>Mold-Free</h5>
+            <p>Does not absorb moisture, preventing tropical mold.</p>
+          </div>
+          <div class="materials__cell">
+            <span>04</span>
+            <h5>Low Maintenance</h5>
+            <p>Clean with just soap and water. No sealing or painting.</p>
+          </div>
+          <div class="materials__cell">
+            <span>05</span>
+            <h5>Eco-Friendly</h5>
+            <p>Made from recycled HDPE. Fully recyclable at end of life.</p>
+          </div>
+          <div class="materials__cell">
+            <span>06</span>
+            <h5>Fade-Proof</h5>
+            <p>UV-stabilized, integrated color — not painted on top.</p>
+          </div>
+          <div class="materials__cell">
+            <span>07</span>
+            <h5>Structural</h5>
+            <p>Powder-coated aluminum frames for lasting rigidity.</p>
+          </div>
+          <div class="materials__cell">
+            <span>08</span>
+            <h5>Comfort</h5>
+            <p>Flexible weave for breathability and ergonomic comfort.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page__num">
+      <span>— 07 —</span>
+      <span>aquasignature.com</span>
+    </div>
+  </div>
+
+  <!-- PAGE 8 — BACK COVER -->
+  <div class="page back">
+    <div class="page__hdr page__hdr--inv">
+      <span>Aqua Signature · 2026</span>
+      <span>End · Contact &amp; Trade</span>
+    </div>
+    <div>
+      <h1 class="back__title">Tell us about<br/><em>your project.</em></h1>
+    </div>
+    <div>
+      <p class="back__motto">"Designed for the sun. Crafted for life." — Aqua Signature, Dominican Republic</p>
+    </div>
+    <div>
+      <div class="back__grid">
+        <div class="back__col">
+          <h4>— Direct</h4>
+          <p>
+            <strong>@aquasignaturerd</strong>
+            829 766 2288<br/>
+            809 769 5556<br/>
+            Mon–Fri · 09:00–18:00
+          </p>
+        </div>
+        <div class="back__col">
+          <h4>— Trade Programme</h4>
+          <p>
+            For verified hospitality buyers, designers, &amp; architects. Apply via the contact form.
+          </p>
+        </div>
+      </div>
+      <div class="back__brand">
+        <svg viewBox="0 0 64 76" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dgb" x1="32" y1="2" x2="32" y2="74" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#DCF2F6"/>
+              <stop offset="35%" stop-color="#9FE3F0"/>
+              <stop offset="70%" stop-color="#5CC4DA"/>
+              <stop offset="100%" stop-color="#0E6E80"/>
+            </linearGradient>
+          </defs>
+          <path d="M32 2 C32 2, 56 30, 56 50 C56 64, 45 74, 32 74 C19 74, 8 64, 8 50 C8 30, 32 2, 32 2 Z" fill="url(#dgb)"/>
+          <ellipse cx="26" cy="22" rx="6" ry="9" fill="rgba(255,255,255,0.85)"/>
+        </svg>
+        <span class="back__wm">
+          <span class="back__aqua">AQUA</span>
+          <span class="back__sig">Signature</span>
+        </span>
+      </div>
+    </div>
+    <div class="page__num page__num--inv">
+      <span>— 08 —</span>
+      <span>aquasignature.com · Dominican Republic</span>
+    </div>
+  </div>
+
+  <script>
+    (async () => {
+      try { await document.fonts.ready; } catch (e) {}
+      await new Promise(r => setTimeout(r, 1200));
+      window.print();
+    })();
+  </script>
+</body>
+</html>

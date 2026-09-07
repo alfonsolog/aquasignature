@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aqua Signature — IG Posts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allura&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap">
+<style>
+  :root {
+    --aqua: #2FAFC9;
+    --teal: #1B96A8;
+    --teal-ink: #0A4D5A;
+    --aqua-pale: #DCF2F6;
+    --sand: #F5EDE0;
+    --sand-warm: #EFE3D0;
+    --ocean: #0A2A33;
+    --slate: #5C6B72;
+    --paper: #FAFBFB;
+    --display: "Cormorant Garamond", serif;
+    --caps: "Cinzel", serif;
+    --script: "Allura", cursive;
+    --mono: "JetBrains Mono", monospace;
+    --body: "Inter", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1080px; overflow: hidden; background: #000; }
+
+  .post {
+    position: absolute; inset: 0;
+    width: 1080px; height: 1080px;
+    display: none;
+    overflow: hidden;
+    font-family: var(--body);
+  }
+  .post.is-on { display: block; }
+
+  .post__img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  /* scrims */
+  .scrim-btm { position: absolute; inset: 0; background: linear-gradient(to top, rgba(8,25,30,0.62) 0%, rgba(8,25,30,0.18) 26%, rgba(8,25,30,0) 45%); }
+  .scrim-top { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(8,25,30,0.38) 0%, rgba(8,25,30,0) 30%); }
+
+  /* logo lockup */
+  .lockup { display: flex; align-items: center; gap: 18px; }
+  .lockup img.drop { width: 44px; height: 52px; }
+  .lockup__text { display: flex; flex-direction: column; line-height: 1; }
+  .lockup__aqua { font-family: var(--caps); font-size: 34px; letter-spacing: 0.34em; font-weight: 500; }
+  .lockup__sig { font-family: var(--script); font-size: 34px; margin-top: 2px; transform: translateX(2px) rotate(-2deg); }
+  .lockup--light { color: var(--paper); }
+  .lockup--light .lockup__sig { color: var(--aqua-pale); }
+  .lockup--dark { color: var(--ocean); }
+  .lockup--dark .lockup__sig { color: var(--teal); }
+  .lockup--sm img.drop { width: 32px; height: 38px; }
+  .lockup--sm .lockup__aqua { font-size: 24px; }
+  .lockup--sm .lockup__sig { font-size: 25px; }
+  .lockup--center { flex-direction: column; gap: 22px; text-align: center; }
+  .lockup--center .lockup__text { align-items: center; }
+  .lockup--center img.drop { width: 64px; height: 76px; }
+  .lockup--center .lockup__aqua { font-size: 52px; letter-spacing: 0.4em; text-indent: 0.4em; }
+  .lockup--center .lockup__sig { font-size: 56px; margin-top: 10px; }
+
+  .corner-tl { position: absolute; top: 56px; left: 60px; z-index: 3; }
+  .corner-tr-img { position: absolute; top: 56px; right: 60px; z-index: 3; }
+  .logo-img { display: block; }
+  .logo-img--corner { width: 168px; }
+  .logo-img--mat { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 180px; }
+  .logo-img--card { width: 380px; }
+  .logo-img--top { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); width: 168px; }
+  .logo-img--hero { width: 330px; }
+  .logo-img--contact { width: 250px; }
+  .corner-tr { position: absolute; top: 60px; right: 60px; z-index: 3; font-family: var(--mono); font-size: 17px; letter-spacing: 0.22em; color: var(--paper); opacity: 0.92; }
+  .foot { position: absolute; left: 60px; right: 60px; bottom: 52px; z-index: 3; display: flex; justify-content: space-between; align-items: flex-end; }
+  .foot__cap { color: var(--paper); }
+  .foot__cap .eyebrow { font-family: var(--mono); font-size: 16px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--aqua-pale); display: block; margin-bottom: 14px; }
+  .foot__cap .line { font-family: var(--display); font-size: 52px; font-weight: 500; line-height: 1.04; letter-spacing: 0.01em; }
+  .foot__cap .line em { font-style: italic; color: var(--aqua-pale); }
+  .foot__handle { font-family: var(--mono); font-size: 17px; letter-spacing: 0.18em; color: rgba(250,251,251,0.85); white-space: nowrap; padding-bottom: 6px; }
+
+  /* framed variant */
+  .frame { position: absolute; inset: 36px; border: 1px solid rgba(250,251,251,0.55); z-index: 2; pointer-events: none; }
+
+  /* polaroid / matted variant */
+  .post--mat { background: var(--sand); }
+  .post--mat .mat-photo { position: absolute; top: 64px; left: 64px; right: 64px; height: 740px; overflow: hidden; }
+  .post--mat .mat-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .post--mat .mat-foot { position: absolute; left: 64px; right: 64px; bottom: 58px; display: flex; justify-content: space-between; align-items: flex-end; color: var(--ocean); }
+  .post--mat .mat-title { font-family: var(--display); font-size: 58px; font-weight: 500; line-height: 1.02; }
+  .post--mat .mat-title em { font-style: italic; color: var(--teal); }
+  .post--mat .mat-eyebrow { font-family: var(--mono); font-size: 15px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--slate); display: block; margin-bottom: 16px; }
+  .post--mat .mat-num { position: absolute; top: 830px; right: 64px; font-family: var(--mono); font-size: 16px; letter-spacing: 0.22em; color: var(--slate); }
+
+  /* typographic posts */
+  .post--type { display: none; }
+  .post--type.is-on { display: flex; }
+  .post--type { flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 100px; }
+  .post--quote { background: var(--ocean); color: var(--paper); }
+  .post--quote .q-rule { width: 64px; height: 1px; background: var(--aqua); margin: 44px auto; }
+  .post--quote blockquote { font-family: var(--display); font-size: 78px; font-weight: 500; line-height: 1.12; max-width: 18ch; }
+  .post--quote blockquote em { font-style: italic; color: var(--aqua-pale); }
+  .post--quote .q-attr { font-family: var(--mono); font-size: 17px; letter-spacing: 0.26em; text-transform: uppercase; color: rgba(250,251,251,0.6); }
+  .post--motto { background: var(--sand); color: var(--ocean); }
+  .post--motto .m-line1 { font-family: var(--caps); font-size: 64px; letter-spacing: 0.18em; font-weight: 500; line-height: 1.25; }
+  .post--motto .m-line2 { font-family: var(--script); font-size: 110px; color: var(--teal); line-height: 1; margin-top: 26px; transform: rotate(-2deg); }
+  .post--motto .m-rule { width: 64px; height: 1px; background: var(--teal); margin: 48px auto; }
+  .post--motto .m-meta { font-family: var(--mono); font-size: 16px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--slate); }
+
+  /* nav (hidden during capture) */
+  .nav { position: fixed; bottom: 20px; right: 20px; z-index: 50; display: flex; gap: 8px; align-items: center; font-family: var(--mono); color: #fff; }
+  .nav button { background: rgba(10,42,51,0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); width: 52px; height: 52px; font-size: 20px; cursor: pointer; }
+  .nav span { background: rgba(10,42,51,0.8); padding: 14px 18px; font-size: 16px; }
+  body.capture .nav { display: none; }
+</style>
+</head>
+<body>
+
+<!-- 01 — COVER: hero w/ centered lockup -->
+<section class="post" data-n="1">
+  <img class="post__img" src="assets/photos/tray-hero-woman.jpg" alt="">
+  <div style="position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:110px;">
+    <img class="logo-img logo-img--hero" src="assets/logo-lockup-white.png" alt="Aqua Signature">
+  </div>
+</section>
+
+<!-- 02 — Tray charcuterie -->
+<section class="post" data-n="2">
+  <img class="post__img" src="assets/photos/tray-charcuterie.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 03 — Box morning swim -->
+<section class="post" data-n="3">
+  <img class="post__img" src="assets/photos/box-towel-woman.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 04 — Bar sunset (matted) -->
+<section class="post" data-n="4">
+  <img class="post__img" src="assets/photos/bar-poolside-woman.jpg" alt="">
+  <img class="corner-tr-img logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 05 — Founder quote -->
+<section class="post post--type post--quote" data-n="5">
+  <img class="logo-img logo-img--card" src="assets/logo-lockup-white.png" alt="Aqua Signature">
+</section>
+
+<!-- 06 — Tray aerial water -->
+<section class="post" data-n="6">
+  <img class="post__img" src="assets/photos/tray-aerial-sun.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-white.png" alt="Aqua Signature">
+</section>
+
+<!-- 07 — Box terrace (matted) -->
+<section class="post" data-n="7">
+  <img class="post__img" src="assets/photos/box-poolside.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 08 — Bar archway -->
+<section class="post" data-n="8">
+  <img class="post__img" src="assets/photos/bar-archway.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 09 — Tray turquoise breakfast (matted) -->
+<section class="post" data-n="9">
+  <img class="post__img" src="assets/photos/tray-turquoise-breakfast.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 10 — Tray float leaves -->
+<section class="post" data-n="10">
+  <img class="post__img" src="assets/photos/tray-float-leaves.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 11 — Box open ritual -->
+<section class="post" data-n="11">
+  <img class="post__img" src="assets/photos/box-woman-open.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 12 — Bar detail (matted) -->
+<section class="post" data-n="12">
+  <img class="post__img" src="assets/photos/bar-detail.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 13 — Motto type post -->
+<section class="post post--type post--motto" data-n="13">
+  <img class="logo-img logo-img--card" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 14 — Tray fruits aerial -->
+<section class="post" data-n="14">
+  <img class="post__img" src="assets/photos/tray-fruits-aerial.jpg" alt="">
+  <img class="corner-tl logo-img logo-img--corner" src="assets/logo-lockup-color.png" alt="Aqua Signature">
+</section>
+
+<!-- 15 — Contact / closing -->
+<section class="post" data-n="15">
+  <img class="post__img" src="assets/photos/tray-hand-pool.jpg" alt="">
+  <div style="position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:96px; text-align:center;">
+    <img class="logo-img logo-img--contact" src="assets/logo-lockup-white.png" alt="Aqua Signature">
+  </div>
+</section>
+
+<div class="nav">
+  <button onclick="step(-1)">←</button>
+  <span id="navLabel">1 / 15</span>
+  <button onclick="step(1)">→</button>
+</div>
+
+<script>
+  const posts = [...document.querySelectorAll('.post')];
+  let cur = parseInt(localStorage.getItem('igPostCur') || '0', 10);
+  if (isNaN(cur) || cur < 0 || cur >= posts.length) cur = 0;
+  function showPost(n) {
+    cur = ((n % posts.length) + posts.length) % posts.length;
+    posts.forEach((p, i) => p.classList.toggle('is-on', i === cur));
+    document.getElementById('navLabel').textContent = (cur + 1) + ' / 15';
+    localStorage.setItem('igPostCur', String(cur));
+  }
+  function step(d) { showPost(cur + d); }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') step(1);
+    if (e.key === 'ArrowLeft') step(-1);
+  });
+  showPost(cur);
+
+  // Inline Google Fonts as data-URIs so the capture pipeline (which cannot
+  // read cross-origin stylesheets) embeds the real fonts instead of fallbacks.
+  window.fontsInlined = false;
+  (async () => {
+    try {
+      const cssUrl = document.querySelector('link[href*="fonts.googleapis"]').href;
+      const css = await (await fetch(cssUrl)).text();
+      // keep only latin subset blocks to stay light
+      const blocks = css.split('@font-face').slice(1)
+        .map(b => '@font-face' + b.slice(0, b.indexOf('}') + 1));
+      const latin = [];
+      const parts = css.split(/\/\*\s*([a-z-]+)\s*\*\//).slice(1);
+      for (let i = 0; i < parts.length; i += 2) {
+        if (parts[i] === 'latin') latin.push(parts[i + 1]);
+      }
+      let out = latin.join('\n');
+      const urls = [...new Set([...out.matchAll(/url\((https:[^)]+?)\)/g)].map(m => m[1]))];
+      for (const u of urls) {
+        const buf = new Uint8Array(await (await fetch(u)).arrayBuffer());
+        let bin = '';
+        for (let i = 0; i < buf.length; i += 8192) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 8192));
+        out = out.split(u).join('data:font/woff2;base64,' + btoa(bin));
+      }
+      const st = document.createElement('style');
+      st.textContent = out;
+      document.head.appendChild(st);
+      window.fontsInlined = true;
+      console.log('fonts inlined:', urls.length);
+    } catch (e) { console.log('font inline failed', e); }
+  })();
+</script>
+</body>
+</html>

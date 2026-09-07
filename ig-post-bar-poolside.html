@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aqua Signature — Post Bar Poolside</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Allura&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap">
+<style>
+  :root{
+    --aqua:#2FAFC9; --teal:#1B96A8; --teal-ink:#0A4D5A;
+    --aqua-pale:#DCF2F6; --aqua-deep:#0E5C6B;
+    --sand:#F5EDE0; --paper:#FAFBFB; --ocean:#08252E;
+    --bougain:#D24E86;
+    --display:"Cormorant Garamond",serif;
+    --caps:"Cinzel",serif; --script:"Allura",cursive;
+    --mono:"JetBrains Mono",monospace; --body:"Inter",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1080px;height:1080px;overflow:hidden;background:#000;}
+
+  .post{
+    position:relative;width:1080px;height:1080px;overflow:hidden;
+    font-family:var(--body);
+    /* sunlit pool water: pale surface up top into deep turquoise */
+    background:
+      radial-gradient(120% 80% at 78% 8%, rgba(255,255,255,.45) 0%, rgba(255,255,255,0) 42%),
+      linear-gradient(178deg,
+        #BDEBF1 0%, #8FDCE6 20%, #4FC2D2 44%, #2BA7BC 66%, #1B8FA6 84%, #0E6E83 100%);
+  }
+  /* faint caustic ripples — pure CSS, no imagery */
+  .water{position:absolute;inset:0;opacity:.16;mix-blend-mode:soft-light;
+    background:
+      repeating-linear-gradient(102deg, rgba(255,255,255,.9) 0 2px, transparent 2px 26px),
+      repeating-linear-gradient(72deg, rgba(255,255,255,.7) 0 2px, transparent 2px 34px);}
+  .sheen{position:absolute;inset:0;
+    background:linear-gradient(160deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 26%);}
+
+  .frame{position:absolute;inset:34px;border:1px solid rgba(255,255,255,.5);
+    z-index:6;pointer-events:none;}
+
+  /* top */
+  .topbar{position:absolute;top:64px;left:0;right:0;z-index:5;
+    display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .topbar img{width:150px;display:block;
+    filter:drop-shadow(0 4px 16px rgba(8,37,46,.45));}
+  .eyebrow{font-family:var(--mono);font-size:15px;letter-spacing:.4em;
+    text-transform:uppercase;color:var(--aqua-pale);
+    text-shadow:0 1px 8px rgba(8,37,46,.4);}
+
+  /* photo card floating on the water */
+  .card{position:absolute;top:224px;left:50%;transform:translateX(-50%) rotate(-1.4deg);
+    width:430px;height:458px;background:var(--paper);padding:18px 18px 64px;
+    box-shadow:0 42px 70px -28px rgba(8,37,46,.62), 0 8px 22px rgba(8,37,46,.28);
+    z-index:4;}
+  .card__img{width:100%;height:100%;overflow:hidden;background:#cdd6d2;}
+  .card__img img{width:100%;height:100%;object-fit:cover;object-position:50% 72%;
+    display:block;}
+  .card__tag{position:absolute;left:0;right:0;bottom:20px;text-align:center;
+    font-family:var(--script);font-size:38px;color:var(--teal);line-height:1;}
+  /* pinned accent — bougainvillea coral dot */
+  .card::before{content:"";position:absolute;top:-9px;left:50%;
+    width:18px;height:18px;border-radius:50%;background:var(--bougain);
+    transform:translateX(-50%);box-shadow:0 4px 10px rgba(8,37,46,.4);z-index:5;}
+
+  /* headline block */
+  .lede{position:absolute;left:74px;right:74px;bottom:150px;z-index:5;text-align:center;}
+  .lede .kick{font-family:var(--mono);font-size:16px;letter-spacing:.34em;
+    text-transform:uppercase;color:var(--aqua-pale);margin-bottom:18px;
+    text-shadow:0 1px 8px rgba(8,37,46,.4);}
+  .lede h1{font-family:var(--display);font-weight:500;color:var(--paper);
+    font-size:56px;line-height:1.04;letter-spacing:.01em;
+    text-shadow:0 3px 18px rgba(8,37,46,.42);}
+  .lede h1 em{font-style:italic;color:#FFE9F1;}
+  .rule{width:62px;height:1px;background:rgba(255,255,255,.7);margin:22px auto 16px;}
+  .lede .sub{font-family:var(--display);font-style:italic;font-size:44px;
+    letter-spacing:.01em;color:var(--paper);line-height:1.12;
+    text-shadow:0 2px 12px rgba(8,37,46,.45);}
+  .lede .place{font-family:var(--mono);font-size:17px;letter-spacing:.36em;
+    text-transform:uppercase;color:var(--aqua-pale);
+    text-shadow:0 1px 8px rgba(8,37,46,.4);}
+
+  /* footer handle */
+  .foot{position:absolute;left:74px;right:74px;bottom:56px;z-index:5;
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--mono);font-size:16px;letter-spacing:.2em;
+    color:rgba(250,251,251,.9);text-shadow:0 1px 8px rgba(8,37,46,.4);}
+</style>
+</head>
+<body>
+<section class="post">
+  <div class="water"></div>
+  <div class="sheen"></div>
+  <div class="frame"></div>
+
+  <div class="topbar">
+    <img src="assets/logo-lockup-white.png" alt="Aqua Signature">
+  </div>
+
+  <figure class="card">
+    <div class="card__img">
+      <img src="assets/photos/bar-cart-raw.jpg" alt="Bar rodante de poly-rattán Aqua Signature">
+    </div>
+    <figcaption class="card__tag">poolside, siempre</figcaption>
+  </figure>
+
+  <div class="lede">
+    <div class="sub">Resistente al Sol,<br>al Agua y al Tiempo</div>
+    <div class="rule"></div>
+    <div class="place">República Dominicana</div>
+  </div>
+
+  <div class="foot">
+    <span>@aquasignature.do</span>
+    <span>aquasignature.do</span>
+  </div>
+</section>
+
+<script>
+  // Inline Google Fonts as data-URIs so the capture pipeline embeds real fonts.
+  (async () => {
+    try{
+      const cssUrl = document.querySelector('link[href*="fonts.googleapis"]').href;
+      const css = await (await fetch(cssUrl)).text();
+      const parts = css.split(/\/\*\s*([a-z-]+)\s*\*\//).slice(1);
+      const latin = [];
+      for(let i=0;i<parts.length;i+=2){ if(parts[i]==='latin') latin.push(parts[i+1]); }
+      let out = latin.join('\n');
+      const urls = [...new Set([...out.matchAll(/url\((https:[^)]+?)\)/g)].map(m=>m[1]))];
+      for(const u of urls){
+        const buf = new Uint8Array(await (await fetch(u)).arrayBuffer());
+        let bin=''; for(let i=0;i<buf.length;i+=8192) bin+=String.fromCharCode.apply(null,buf.subarray(i,i+8192));
+        out = out.split(u).join('data:font/woff2;base64,'+btoa(bin));
+      }
+      const st=document.createElement('style'); st.textContent=out; document.head.appendChild(st);
+      window.fontsInlined=true; console.log('fonts inlined:',urls.length);
+    }catch(e){ console.log('font inline failed',e); }
+  })();
+</script>
+</body>
+</html>

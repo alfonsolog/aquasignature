@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aqua Signature — Flyer Prototypes</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Allura&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+  <style>
+    :root {
+      --aqua-light: #6FCFE3;
+      --aqua: #2FAFC9;
+      --teal: #1B96A8;
+      --teal-deep: #0E6E80;
+      --aqua-pale: #DCF2F6;
+      --ocean: #0A2A33;
+      --paper: #FAFBFB;
+      --slate: #5C6B72;
+      --display: "Cormorant Garamond", serif;
+      --caps: "Cinzel", serif;
+      --script: "Allura", cursive;
+      --body: "Inter", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #14171a; color: var(--paper); font-family: var(--body); }
+    img { display: block; }
+
+    .gallery {
+      padding: 40px 40px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      max-width: 9.2in;
+      margin: 0 auto;
+    }
+    .gallery > h1 {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: 38px;
+      margin: 0;
+      text-align: center;
+    }
+    .gallery > h1 em {
+      font-family: var(--script);
+      font-style: normal;
+      color: var(--aqua-light);
+      font-size: 1.15em;
+      line-height: 0.6;
+    }
+    .gallery > p {
+      text-align: center;
+      color: rgba(255,255,255,0.65);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      margin: -20px 0 12px;
+    }
+
+    .prototype {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .prototype__label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--aqua-light);
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+    }
+    .prototype__label span {
+      color: rgba(255,255,255,0.55);
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 16px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    /* Half-letter LANDSCAPE flyer (8.5 × 5.5 in) */
+    .flyer {
+      width: 8.5in;
+      height: 5.5in;
+      position: relative;
+      overflow: hidden;
+      background: var(--ocean);
+      color: var(--paper);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .flyer__bg {
+      position: absolute; inset: 0;
+      background: url("assets/photos/tray-hero-woman.jpg") center 32% / cover no-repeat;
+      filter: brightness(1.06) saturate(1.04);
+    }
+    .flyer__bg::after {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(90deg,
+          rgba(2,16,26,0.55) 0%,
+          rgba(2,16,26,0.10) 36%,
+          rgba(2,16,26,0.0) 60%,
+          rgba(2,16,26,0.30) 100%);
+    }
+
+    /* ============= COMMON BRAND + FOOTER ============= */
+    .brand-strip {
+      position: absolute;
+      top: 0.3in;
+      left: 0.4in;
+      right: 0.4in;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0.3in;
+      z-index: 4;
+    }
+    .brand-strip__meta {
+      font-family: var(--mono);
+      font-size: 6.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.8;
+      line-height: 1.6;
+    }
+    .brand-strip__meta--right { text-align: right; }
+    .brand-strip__mark {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-strip__mark svg { width: 18px; height: 22px; filter: drop-shadow(0 1px 5px rgba(0,0,0,0.4)); }
+    .brand-strip__wm { display: flex; flex-direction: column; line-height: 0.95; }
+    .brand-strip__aqua {
+      font-family: var(--caps); font-weight: 600;
+      font-size: 11px; letter-spacing: 0.16em;
+      color: var(--aqua-pale);
+    }
+    .brand-strip__sig {
+      font-family: var(--script); font-size: 16px;
+      color: var(--aqua-light); margin-top: -5px;
+    }
+
+    .foot-strip {
+      position: absolute;
+      bottom: 0.25in;
+      left: 0.4in;
+      right: 0.4in;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0.3in;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.18);
+      z-index: 4;
+    }
+    .foot-strip__col {
+      font-family: var(--mono);
+      font-size: 6.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.78;
+      line-height: 1.65;
+    }
+    .foot-strip__col--right { text-align: right; }
+    .foot-strip__col strong {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 10px;
+      letter-spacing: 0;
+      text-transform: none;
+      opacity: 1;
+      color: var(--paper);
+      font-weight: 500;
+      display: block;
+    }
+    .foot-strip__motto {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 10px;
+      color: var(--aqua-pale);
+      text-align: center;
+      line-height: 1.3;
+      max-width: 22ch;
+      margin: 0;
+    }
+
+    /* ============= TITLE BLOCKS ============= */
+    .title-block {
+      position: absolute;
+      z-index: 3;
+    }
+    .title-block::before {
+      content: "";
+      position: absolute;
+      inset: -10px -16px -10px -16px;
+      background: radial-gradient(ellipse 70% 80% at 30% 50%, rgba(2,16,26,0.55) 0%, rgba(2,16,26,0.0) 75%);
+      z-index: -1;
+      pointer-events: none;
+    }
+    .title-block__eyebrow {
+      font-family: var(--mono);
+      font-size: 7px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--aqua-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .title-block__eyebrow::before {
+      content: ""; width: 18px; height: 1px; background: currentColor; opacity: 0.5;
+    }
+    .title-block__title {
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: 36px;
+      line-height: 0.95;
+      letter-spacing: -0.018em;
+      margin: 0;
+      color: var(--paper);
+      text-shadow: 0 2px 14px rgba(0,0,0,0.5);
+      max-width: 11ch;
+    }
+    .title-block__title em {
+      font-family: var(--script);
+      font-style: normal;
+      color: var(--aqua-light);
+      font-size: 1.18em;
+      line-height: 0.55;
+    }
+    .title-block__sub {
+      font-size: 8px;
+      line-height: 1.55;
+      max-width: 28ch;
+      color: var(--aqua-pale);
+      opacity: 0.92;
+      margin: 8px 0 0;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+    }
+
+    /* ============= PROTOTYPE A — VERTICAL STRIP RIGHT ============= */
+    .proto-a .title-block {
+      left: 0.4in;
+      top: 1.3in;
+      max-width: 4in;
+    }
+    .proto-a .strip-vert {
+      position: absolute;
+      top: 0.85in;
+      right: 0.4in;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 3;
+    }
+    .proto-a .strip-vert .piece {
+      width: 1.5in;
+      height: 1.1in;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    .proto-a .strip-vert .piece img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .proto-a .strip-vert .piece-shade {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 30%, rgba(2,16,26,0.92) 100%);
+    }
+    .proto-a .strip-vert .piece-body {
+      position: absolute; bottom: 4px; left: 7px; right: 7px;
+      color: var(--paper);
+    }
+    .proto-a .strip-vert .piece-name {
+      font-family: var(--display);
+      font-size: 14px;
+      line-height: 1;
+      margin: 0;
+    }
+    .proto-a .strip-vert .piece-name em {
+      font-family: var(--script); font-style: normal;
+      color: var(--aqua-light); font-size: 1.05em; line-height: 0.6;
+    }
+    .proto-a .strip-vert .piece-price {
+      font-family: var(--mono);
+      font-size: 6px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--aqua-light);
+      opacity: 0.9;
+      margin-top: 1px;
+      display: block;
+    }
+
+    /* ============= PROTOTYPE B — HORIZONTAL THUMB STRIP TOP-RIGHT ============= */
+    .proto-b .title-block {
+      left: 0.4in;
+      bottom: 0.85in;
+      max-width: 4.5in;
+    }
+    .proto-b .title-block .title-block__title {
+      font-size: 42px;
+    }
+    .proto-b .strip-horiz {
+      position: absolute;
+      top: 0.85in;
+      right: 0.4in;
+      display: flex;
+      gap: 6px;
+      z-index: 3;
+    }
+    .proto-b .strip-horiz .piece {
+      width: 1.1in;
+      height: 1.4in;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    .proto-b .strip-horiz .piece img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .proto-b .strip-horiz .piece-shade {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 30%, rgba(2,16,26,0.92) 100%);
+    }
+    .proto-b .strip-horiz .piece-body {
+      position: absolute; bottom: 4px; left: 6px; right: 6px;
+      color: var(--paper);
+    }
+    .proto-b .strip-horiz .piece-no {
+      font-family: var(--mono);
+      font-size: 5.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.78;
+      display: block;
+    }
+    .proto-b .strip-horiz .piece-name {
+      font-family: var(--display);
+      font-size: 13px;
+      line-height: 1;
+      margin: 1px 0;
+    }
+    .proto-b .strip-horiz .piece-name em {
+      font-family: var(--script); font-style: normal;
+      color: var(--aqua-light); font-size: 1.05em; line-height: 0.6;
+    }
+    .proto-b .strip-horiz .piece-price {
+      font-family: var(--mono);
+      font-size: 6px;
+      letter-spacing: 0.18em;
+      color: var(--aqua-light);
+      opacity: 0.9;
+    }
+
+    /* ============= PROTOTYPE C — FLOATING CIRCLES TOP-RIGHT ============= */
+    .proto-c .title-block {
+      left: 0.4in;
+      bottom: 0.85in;
+      max-width: 5in;
+    }
+    .proto-c .title-block .title-block__title {
+      font-size: 46px;
+    }
+    .proto-c .circles {
+      position: absolute;
+      top: 0.9in;
+      right: 0.45in;
+      display: flex;
+      gap: 14px;
+      align-items: flex-end;
+      z-index: 3;
+    }
+    .proto-c .circles .piece {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .proto-c .circles .piece-photo {
+      width: 1in;
+      height: 1in;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.55), inset 0 0 0 2px rgba(255,255,255,0.5);
+      position: relative;
+    }
+    .proto-c .circles .piece-photo img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .proto-c .circles .piece-name {
+      font-family: var(--display);
+      font-size: 14px;
+      line-height: 1;
+      margin: 0;
+      color: var(--paper);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+    }
+    .proto-c .circles .piece-name em {
+      font-family: var(--script); font-style: normal;
+      color: var(--aqua-light); font-size: 1.05em; line-height: 0.6;
+    }
+    .proto-c .circles .piece-price {
+      font-family: var(--mono);
+      font-size: 6.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--aqua-light);
+      opacity: 0.85;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+    .proto-c .circles .piece-no {
+      display: block;
+      font-family: var(--mono);
+      font-size: 5.5px;
+      letter-spacing: 0.22em;
+      color: var(--aqua-pale);
+      opacity: 0.7;
+      margin-bottom: 1px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="gallery">
+    <h1>Flyer <em>Prototypes</em></h1>
+    <p>Three approaches — same brand vocabulary, different ways to let the hero photo carry the message.</p>
+
+    <!-- ============ PROTOTYPE A ============ -->
+    <article class="prototype">
+      <div class="prototype__label">
+        <span>A.</span> Vertical Strip · Top-Right
+        <span style="opacity: 0.6; font-size: 11px; font-family: var(--mono); letter-spacing: 0;">Three small cards stacked on the right rail. Title block balances on the left, photo dominates the center.</span>
+      </div>
+      <div class="flyer proto-a">
+        <div class="flyer__bg"></div>
+        <header class="brand-strip">
+          <div class="brand-strip__meta">Dominican Republic<br/>Est. 2026 · N 18°28′</div>
+          <div class="brand-strip__mark">
+            <svg viewBox="0 0 64 76" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="dgA" x1="32" y1="2" x2="32" y2="74" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#DCF2F6"/><stop offset="35%" stop-color="#9FE3F0"/><stop offset="70%" stop-color="#5CC4DA"/><stop offset="100%" stop-color="#0E6E80"/></linearGradient></defs>
+              <path d="M32 2 C32 2, 56 30, 56 50 C56 64, 45 74, 32 74 C19 74, 8 64, 8 50 C8 30, 32 2, 32 2 Z" fill="url(#dgA)"/>
+              <ellipse cx="26" cy="22" rx="6" ry="9" fill="rgba(255,255,255,0.85)"/>
+            </svg>
+            <span class="brand-strip__wm"><span class="brand-strip__aqua">AQUA</span><span class="brand-strip__sig">Signature</span></span>
+          </div>
+          <div class="brand-strip__meta brand-strip__meta--right">Floating Editions</div>
+        </header>
+
+        <section class="title-block">
+          <div class="title-block__eyebrow">— Caribbean Outdoor Living</div>
+          <h1 class="title-block__title">Designed for the sun.<br/><em>Crafted</em> for life.</h1>
+          <p class="title-block__sub">Premium poly rattan, engineered for the Caribbean — from villa terraces to resort pools.</p>
+        </section>
+
+        <aside class="strip-vert">
+          <div class="piece">
+            <img src="assets/photos/tray-hero-woman.jpg" alt="Aqua Tray" style="object-position: center 78%;" />
+            <div class="piece-shade"></div>
+            <div class="piece-body">
+              <h3 class="piece-name">Aqua <em>Tray</em></h3>
+              <span class="piece-price">01 · From $180</span>
+            </div>
+          </div>
+          <div class="piece">
+            <img src="assets/photos/box-woman-open.jpg" alt="Aqua Box" />
+            <div class="piece-shade"></div>
+            <div class="piece-body">
+              <h3 class="piece-name">Aqua <em>Box</em></h3>
+              <span class="piece-price">02 · From $480</span>
+            </div>
+          </div>
+          <div class="piece">
+            <img src="assets/photos/bar-poolside-woman.jpg" alt="Aqua Bar" />
+            <div class="piece-shade"></div>
+            <div class="piece-body">
+              <h3 class="piece-name">Aqua <em>Bar</em></h3>
+              <span class="piece-price">03 · From $1,280</span>
+            </div>
+          </div>
+        </aside>
+
+        <footer class="foot-strip">
+          <div class="foot-strip__col"><strong>@aquasignaturerd</strong>829 766 2288 · 809 769 5556</div>
+          <p class="foot-strip__motto">"Designed for the sun.<br/>Crafted for life."</p>
+          <div class="foot-strip__col foot-strip__col--right"><strong>Santo Domingo · Punta Cana</strong>Showroom by appointment</div>
+        </footer>
+      </div>
+    </article>
+
+    <!-- ============ PROTOTYPE B ============ -->
+    <article class="prototype">
+      <div class="prototype__label">
+        <span>B.</span> Horizontal Strip · Top-Right
+        <span style="opacity: 0.6; font-size: 11px; font-family: var(--mono); letter-spacing: 0;">Three slim cards float in the top right. Title moves to the bottom left for editorial weight; the photo center is wide open.</span>
+      </div>
+      <div class="flyer proto-b">
+        <div class="flyer__bg"></div>
+        <header class="brand-strip">
+          <div class="brand-strip__meta">Dominican Republic<br/>Est. 2026 · N 18°28′</div>
+          <div class="brand-strip__mark">
+            <svg viewBox="0 0 64 76" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="dgB" x1="32" y1="2" x2="32" y2="74" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#DCF2F6"/><stop offset="35%" stop-color="#9FE3F0"/><stop offset="70%" stop-color="#5CC4DA"/><stop offset="100%" stop-color="#0E6E80"/></linearGradient></defs>
+              <path d="M32 2 C32 2, 56 30, 56 50 C56 64, 45 74, 32 74 C19 74, 8 64, 8 50 C8 30, 32 2, 32 2 Z" fill="url(#dgB)"/>
+              <ellipse cx="26" cy="22" rx="6" ry="9" fill="rgba(255,255,255,0.85)"/>
+            </svg>
+            <span class="brand-strip__wm"><span class="brand-strip__aqua">AQUA</span><span class="brand-strip__sig">Signature</span></span>
+          </div>
+          <div class="brand-strip__meta brand-strip__meta--right">Floating Editions</div>
+        </header>
+
+        <aside class="strip-horiz">
+          <div class="piece">
+            <img src="assets/photos/tray-hero-woman.jpg" alt="Aqua Tray" style="object-position: center 78%;" />
+            <div class="piece-shade"></div>
+            <div class="piece-body">
+              <span class="piece-no">01 / Tray</span>
+              <h3 class="piece-name">Aqua <em>Tray</em></h3>
+              <span class="piece-price">From $180</span>
+            </div>
+          </div>
+          <div class="piece">
+            <img src="assets/photos/box-woman-open.jpg" alt="Aqua Box" />
+            <div class="piece-shade"></div>
+            <div class="piece-body">
+              <span class="piece-no">02 / Box</span>
+              <h3 class="piece-name">Aqua <em>Box</em></h3>
+              <span class="piece-price">From $480</span>
+            </div>
+          </div>
+          <div class="piece">
+            <img src="assets/photos/bar-poolside-woman.jpg" alt="Aqua Bar" />
+            <div class="piece-shade"></div>
+            <div class="piece-body">
+              <span class="piece-no">03 / Bar</span>
+              <h3 class="piece-name">Aqua <em>Bar</em></h3>
+              <span class="piece-price">From $1,280</span>
+            </div>
+          </div>
+        </aside>
+
+        <section class="title-block">
+          <div class="title-block__eyebrow">— The 2026 Collection</div>
+          <h1 class="title-block__title">Designed for the sun.<br/><em>Crafted</em> for life.</h1>
+          <p class="title-block__sub">Premium poly rattan, engineered for the Caribbean.</p>
+        </section>
+
+        <footer class="foot-strip">
+          <div class="foot-strip__col"><strong>@aquasignaturerd</strong>829 766 2288 · 809 769 5556</div>
+          <p class="foot-strip__motto">"Designed for the sun.<br/>Crafted for life."</p>
+          <div class="foot-strip__col foot-strip__col--right"><strong>Santo Domingo · Punta Cana</strong>Showroom by appointment</div>
+        </footer>
+      </div>
+    </article>
+
+    <!-- ============ PROTOTYPE C ============ -->
+    <article class="prototype">
+      <div class="prototype__label">
+        <span>C.</span> Circular Badges · Editorial
+        <span style="opacity: 0.6; font-size: 11px; font-family: var(--mono); letter-spacing: 0;">Three round product badges tucked top-right — softest visual weight. Almost the entire hero photo reads through. Big editorial title below.</span>
+      </div>
+      <div class="flyer proto-c">
+        <div class="flyer__bg"></div>
+        <header class="brand-strip">
+          <div class="brand-strip__meta">Dominican Republic<br/>Est. 2026 · N 18°28′</div>
+          <div class="brand-strip__mark">
+            <svg viewBox="0 0 64 76" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="dgC" x1="32" y1="2" x2="32" y2="74" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#DCF2F6"/><stop offset="35%" stop-color="#9FE3F0"/><stop offset="70%" stop-color="#5CC4DA"/><stop offset="100%" stop-color="#0E6E80"/></linearGradient></defs>
+              <path d="M32 2 C32 2, 56 30, 56 50 C56 64, 45 74, 32 74 C19 74, 8 64, 8 50 C8 30, 32 2, 32 2 Z" fill="url(#dgC)"/>
+              <ellipse cx="26" cy="22" rx="6" ry="9" fill="rgba(255,255,255,0.85)"/>
+            </svg>
+            <span class="brand-strip__wm"><span class="brand-strip__aqua">AQUA</span><span class="brand-strip__sig">Signature</span></span>
+          </div>
+          <div class="brand-strip__meta brand-strip__meta--right">Floating Editions</div>
+        </header>
+
+        <aside class="circles">
+          <div class="piece">
+            <div class="piece-photo"><img src="assets/photos/tray-hero-woman.jpg" alt="Aqua Tray" style="object-position: center 78%;" /></div>
+            <span class="piece-no">01</span>
+            <h3 class="piece-name">Aqua <em>Tray</em></h3>
+            <span class="piece-price">From $180</span>
+          </div>
+          <div class="piece">
+            <div class="piece-photo"><img src="assets/photos/box-woman-open.jpg" alt="Aqua Box" /></div>
+            <span class="piece-no">02</span>
+            <h3 class="piece-name">Aqua <em>Box</em></h3>
+            <span class="piece-price">From $480</span>
+          </div>
+          <div class="piece">
+            <div class="piece-photo"><img src="assets/photos/bar-poolside-woman.jpg" alt="Aqua Bar" /></div>
+            <span class="piece-no">03</span>
+            <h3 class="piece-name">Aqua <em>Bar</em></h3>
+            <span class="piece-price">From $1,280</span>
+          </div>
+        </aside>
+
+        <section class="title-block">
+          <div class="title-block__eyebrow">— Caribbean Outdoor Living</div>
+          <h1 class="title-block__title">Designed for the sun.<br/><em>Crafted</em> for life.</h1>
+          <p class="title-block__sub">Premium poly rattan, engineered for the Caribbean — from villa terraces to resort pools.</p>
+        </section>
+
+        <footer class="foot-strip">
+          <div class="foot-strip__col"><strong>@aquasignaturerd</strong>829 766 2288 · 809 769 5556</div>
+          <p class="foot-strip__motto">"Designed for the sun.<br/>Crafted for life."</p>
+          <div class="foot-strip__col foot-strip__col--right"><strong>Santo Domingo · Punta Cana</strong>Showroom by appointment</div>
+        </footer>
+      </div>
+    </article>
+
+  </div>
+
+</body>
+</html>

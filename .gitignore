@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# Raw photo dump — 422 MB of unreferenced source shots, not used by the site
+uploads/
+
+# Host/tooling scratch
+.thumbnail

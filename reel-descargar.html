@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aqua Signature — Descargar Reel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=JetBrains+Mono:wght@300;400&family=Inter:wght@400;500;600&display=swap">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #06181d; font-family: "Inter", sans-serif; }
+  .wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 48px; padding: 24px; }
+  canvas { height: calc(100vh - 48px); max-height: 880px; aspect-ratio: 1080 / 1920; background: #000; box-shadow: 0 20px 80px rgba(0,0,0,0.6); }
+  .panel { width: 360px; color: #DCF2F6; display: flex; flex-direction: column; gap: 20px; }
+  .panel h1 { font-family: "Cinzel", serif; font-size: 22px; letter-spacing: 0.18em; font-weight: 500; color: #FAFBFB; }
+  .panel p { font-size: 14px; line-height: 1.6; color: rgba(220,242,246,0.75); }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    background: #2FAFC9; color: #06181d; border: none; cursor: pointer;
+    font-family: "Inter", sans-serif; font-size: 16px; font-weight: 600;
+    padding: 20px 24px; border-radius: 4px; letter-spacing: 0.02em;
+  }
+  .btn:hover { background: #45c2db; }
+  .btn:disabled { background: #275e6b; color: rgba(220,242,246,0.5); cursor: default; }
+  .status { font-family: "JetBrains Mono", monospace; font-size: 13px; letter-spacing: 0.08em; color: #2FAFC9; min-height: 20px; }
+  .bar { height: 4px; background: rgba(220,242,246,0.15); border-radius: 2px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0%; background: #2FAFC9; transition: width 0.3s linear; }
+  @media (max-width: 900px) {
+    .wrap { flex-direction: column; gap: 20px; }
+    canvas { height: 56vh; }
+    .panel { width: min(420px, 92vw); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="cv" width="1080" height="1920"></canvas>
+  <div class="panel">
+    <h1>DESCARGAR REEL</h1>
+    <p>Pulsa el botón y el video se graba en tiempo real (30&nbsp;segundos). Al terminar, el archivo se descarga solo. No cambies de pestaña mientras graba.</p>
+    <button class="btn" id="recBtn">🎬 Grabar y descargar (30 s)</button>
+    <div class="bar"><div id="prog"></div></div>
+    <div class="status" id="status">Vista previa en bucle…</div>
+    <p id="hint" style="display:none;">Si el archivo descargado es <b>.webm</b>: súbelo a <b>cloudconvert.com</b> y conviértelo a MP4 gratis, o envíalo a tu teléfono — muchas apps lo aceptan directo.</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  const W = 1080, H = 1920, DUR = 30, FPS = 30;
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const recBtn = document.getElementById('recBtn');
+  const statusEl = document.getElementById('status');
+  const progEl = document.getElementById('prog');
+  const hintEl = document.getElementById('hint');
+
+  const AQUA = '#2FAFC9', OCEAN = '#0A2A33', PALE = '#DCF2F6', PAPER = '#FAFBFB';
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  const E = {
+    linear: t => t,
+    outSine: t => Math.sin((t * Math.PI) / 2),
+    outQuad: t => 1 - (1 - t) * (1 - t),
+    inQuad: t => t * t,
+    outCubic: t => 1 - Math.pow(1 - t, 3),
+    inCubic: t => t * t * t,
+    inOutQuart: t => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2),
+  };
+
+  // ── Assets ────────────────────────────────────────────────────────────────
+  const IMG_SRCS = {
+    hero: 'assets/photos/tray-hero-woman.jpg',
+    ebano1: 'assets/photos/tray-aerial-sun.jpg',
+    ebano2: 'assets/photos/tray-charcuterie.jpg',
+    ebano3: 'assets/photos/tray-hand-pool.jpg',
+    turq1: 'assets/photos/tray-turquoise-empty.jpg',
+    turq2: 'assets/photos/tray-turquoise-breakfast.jpg',
+    cut2: 'assets/photos/tray-turquoise-breakfast-sun.jpg',
+    cut3: 'assets/photos/tray-float-leaves.jpg',
+    logoWhite: 'assets/logo-lockup-white.png',
+    logoColor: 'assets/logo-lockup-color.png',
+  };
+  const IMGS = {};
+  let assetsReady = false;
+
+  function loadAssets() {
+    const entries = Object.entries(IMG_SRCS);
+    let left = entries.length;
+    return new Promise((resolve) => {
+      entries.forEach(([k, src]) => {
+        const im = new Image();
+        im.onload = im.onerror = () => { left -= 1; if (left <= 0) resolve(); };
+        im.src = src;
+        IMGS[k] = im;
+      });
+    });
+  }
+
+  // ── Shot list (mirrors reel-scenes.jsx) ───────────────────────────────────
+  const SHOTS = [
+    { img: 'hero',  start: 0,    end: 5.6,  from: { s: 1.18, x: 0, y: 2 },    to: { s: 1.0, x: 0, y: 0 },    fi: 0.8,  fo: 0.7,  cy: 0.30, ease: E.outSine },
+    { img: 'ebano1', start: 5.2, end: 9.2,  from: { s: 1.0, x: 0, y: 0 },     to: { s: 1.16, x: -1.5, y: 1 }, fi: 0.7,  fo: 0.6,  cy: 0.5,  ease: E.linear },
+    { img: 'ebano2', start: 8.8, end: 12.4, from: { s: 1.16, x: 2, y: -1 },   to: { s: 1.0, x: 0, y: 0 },    fi: 0.6,  fo: 0.6,  cy: 0.5,  ease: E.outSine },
+    { img: 'ebano3', start: 12.0, end: 15.4, from: { s: 1.14, x: -2.5, y: 0 }, to: { s: 1.14, x: 2.5, y: 0 }, fi: 0.6,  fo: 0.9,  cy: 0.5,  ease: E.linear },
+    { img: 'turq1', start: 15.1, end: 19.8, from: { s: 1.0, x: 0, y: 0 },     to: { s: 1.16, x: 0, y: -1.5 }, fi: 0.25, fo: 0.6,  cy: 0.45, ease: E.linear },
+    { img: 'turq2', start: 19.4, end: 24.8, from: { s: 1.16, x: -1.5, y: 1.5 }, to: { s: 1.0, x: 0, y: 0 },  fi: 0.6,  fo: 0.5,  cy: 0.60, ease: E.outSine },
+    { img: 'ebano1', start: 24.5, end: 25.4, from: { s: 1.45, x: 2, y: 2 },   to: { s: 1.55, x: 1, y: 1 },   fi: 0.35, fo: 0.06, cy: 0.5,  ease: E.linear },
+    { img: 'cut2',  start: 25.4, end: 26.3, from: { s: 1.4, x: 0, y: 6 },     to: { s: 1.5, x: 0, y: 4 },    fi: 0.06, fo: 0.06, cy: 0.5,  ease: E.linear },
+    { img: 'cut3',  start: 26.3, end: 27.3, from: { s: 1.06, x: 0, y: 0 },    to: { s: 1.16, x: 0, y: 0 },   fi: 0.06, fo: 0.6,  cy: 0.5,  ease: E.linear },
+  ];
+
+  function drawShot(t, shot) {
+    if (t < shot.start || t >= shot.end) return;
+    const lt = t - shot.start, dur = shot.end - shot.start;
+    const p = shot.ease(clamp(lt / dur, 0, 1));
+    const s = shot.from.s + (shot.to.s - shot.from.s) * p;
+    const tx = (shot.from.x + (shot.to.x - shot.from.x) * p) / 100 * W;
+    const ty = (shot.from.y + (shot.to.y - shot.from.y) * p) / 100 * H;
+    let alpha = 1;
+    if (lt < shot.fi) alpha = E.outQuad(lt / shot.fi);
+    else if (lt > dur - shot.fo) alpha = E.inQuad((dur - lt) / shot.fo);
+
+    const im = IMGS[shot.img];
+    if (!im || !im.naturalWidth) return;
+    const cs = Math.max(W / im.naturalWidth, H / im.naturalHeight);
+    const dw = im.naturalWidth * cs, dh = im.naturalHeight * cs;
+    const ox = (W - dw) * 0.5, oy = (H - dh) * (shot.cy ?? 0.5);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(W / 2, H / 2);
+    ctx.scale(s, s);
+    ctx.translate(tx, ty);
+    ctx.translate(-W / 2, -H / 2);
+    ctx.drawImage(im, ox, oy, dw, dh);
+    ctx.restore();
+  }
+
+  function setLS(px) { if ('letterSpacing' in ctx) ctx.letterSpacing = px + 'px'; }
+
+  // ── Scene 1 overlays: vignette + white logo + subtitle ───────────────────
+  function drawOpen(t) {
+    if (t >= 5.6) return;
+    // vignette
+    const vIn = clamp((t - 0.6) / 1.0, 0, 1);
+    const vOut = 1 - clamp((t - 4.2) / 1.0, 0, 1);
+    const va = 0.5 * vIn * vOut;
+    if (va > 0.005) {
+      const g = ctx.createRadialGradient(W / 2, H * 0.22, 0, W / 2, H * 0.22, H * 0.55);
+      g.addColorStop(0, `rgba(8,25,30,${0.72 * va / 0.5})`);
+      g.addColorStop(1, 'rgba(8,25,30,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+    // logo + line
+    if (t < 0.9 || t > 5.2) return;
+    const lt = t - 0.9, dur = 4.3;
+    const inT = E.outCubic(clamp(lt / 1.0, 0, 1));
+    const outT = E.inCubic(clamp((lt - (dur - 0.6)) / 0.6, 0, 1));
+    const a = inT * (1 - outT);
+    if (a <= 0.005) return;
+    const dy = (1 - inT) * 30;
+    const logo = IMGS.logoWhite;
+    const lw = 380, lh = logo.naturalWidth ? lw * logo.naturalHeight / logo.naturalWidth : 360;
+    const topY = H * 0.13 + dy;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.shadowColor = 'rgba(8,25,30,0.75)';
+    ctx.shadowBlur = 28; ctx.shadowOffsetY = 4;
+    ctx.drawImage(logo, (W - lw) / 2, topY, lw, lh);
+    ctx.shadowBlur = 18; ctx.shadowOffsetY = 2;
+    ctx.fillStyle = PALE;
+    ctx.font = '26px "JetBrains Mono", monospace';
+    setLS(26 * 0.42);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('LA BANDEJA FLOTANTE', W / 2 + 26 * 0.21, topY + lh + 40);
+    setLS(0);
+    ctx.restore();
+  }
+
+  // ── Captions ──────────────────────────────────────────────────────────────
+  function drawCaption(t, start, end, num, label) {
+    if (t < start || t >= end) return;
+    const lt = t - start, dur = end - start;
+    const inT = E.outCubic(clamp(lt / 0.7, 0, 1));
+    const outT = E.inCubic(clamp((lt - (dur - 0.5)) / 0.5, 0, 1));
+    const a = inT * (1 - outT);
+    if (a <= 0.005) return;
+    const x = 72, baseY = H - 150 + (1 - inT) * 26;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.shadowColor = 'rgba(8,25,30,0.55)';
+    ctx.shadowBlur = 24; ctx.shadowOffsetY = 2;
+    // rule + number
+    ctx.fillStyle = PALE;
+    ctx.fillRect(x, baseY - 104 * 1.05 - 14 - 24, 56, 2);
+    ctx.font = '24px "JetBrains Mono", monospace';
+    setLS(24 * 0.34);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = PAPER;
+    ctx.fillText(num.toUpperCase(), x + 56 + 18, baseY - 104 * 1.05 - 14 - 23);
+    setLS(0);
+    // label
+    ctx.font = 'italic 500 104px "Cormorant Garamond", serif';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(label, x, baseY);
+    ctx.restore();
+  }
+
+  // ── Aqua wipe ─────────────────────────────────────────────────────────────
+  function drawWipe(t) {
+    const start = 14.7, dur = 1.0;
+    if (t < start || t >= start + dur) return;
+    const p = E.inOutQuart((t - start) / dur);
+    const x = (-130 + 260 * p) / 100 * W;
+    ctx.save();
+    ctx.transform(1, 0, Math.tan(-8 * Math.PI / 180), 1, 0, 0);
+    const bw = 1.3 * W;
+    const g = ctx.createLinearGradient(x, 0, x + bw, 0);
+    g.addColorStop(0, 'rgba(47,175,201,0)');
+    g.addColorStop(0.18, AQUA);
+    g.addColorStop(0.5, OCEAN);
+    g.addColorStop(0.82, AQUA);
+    g.addColorStop(1, 'rgba(47,175,201,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - 0.3 * W, -0.25 * H, bw + 0.6 * W, 1.5 * H);
+    ctx.restore();
+  }
+
+  // ── Closing card ──────────────────────────────────────────────────────────
+  function drawClose(t) {
+    if (t < 27.1) return;
+    const lt = t - 27.1;
+    const bgIn = clamp(lt / 0.7, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = bgIn;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, W, H);
+
+    const logo = IMGS.logoColor;
+    const lw = 460, lh = logo.naturalWidth ? lw * logo.naturalHeight / logo.naturalWidth : 440;
+    const groupH = lh + 56 + 1 + 26 + 28;
+    const y0 = (H - groupH) / 2;
+
+    const logoIn = E.outCubic(clamp((lt - 0.4) / 0.9, 0, 1));
+    if (logoIn > 0) {
+      ctx.save();
+      ctx.globalAlpha = bgIn * logoIn;
+      const sc = 0.92 + 0.08 * logoIn;
+      ctx.translate(W / 2, y0 + lh / 2);
+      ctx.scale(sc, sc);
+      ctx.drawImage(logo, -lw / 2, -lh / 2, lw, lh);
+      ctx.restore();
+    }
+    const lineIn = E.outCubic(clamp((lt - 1.1) / 0.8, 0, 1));
+    if (lineIn > 0) {
+      ctx.save();
+      ctx.globalAlpha = bgIn * lineIn;
+      const dy = (1 - lineIn) * 18;
+      const ry = y0 + lh + 56 + dy;
+      ctx.fillStyle = AQUA;
+      ctx.fillRect(W / 2 - 32, ry, 64, 2);
+      ctx.fillStyle = OCEAN;
+      ctx.font = '28px "JetBrains Mono", monospace';
+      setLS(28 * 0.3);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('@aquasignaturerd', W / 2 + 28 * 0.15, ry + 28);
+      setLS(0);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // ── Frame render ──────────────────────────────────────────────────────────
+  function renderFrame(t) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#06181d';
+    ctx.fillRect(0, 0, W, H);
+    for (const shot of SHOTS) drawShot(t, shot);
+    drawOpen(t);
+    drawCaption(t, 5.9, 14.6, 'Color 01', 'Ébano');
+    drawCaption(t, 15.5, 24.0, 'Color 02', 'Turquesa');
+    drawWipe(t);
+    drawClose(t);
+  }
+
+  // ── Preview loop ──────────────────────────────────────────────────────────
+  let mode = 'preview';
+  let previewStart = performance.now();
+  function loop(now) {
+    if (mode === 'preview' && assetsReady) {
+      const t = ((now - previewStart) / 1000) % DUR;
+      renderFrame(t);
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ── Recorder ──────────────────────────────────────────────────────────────
+  function pickMime() {
+    const candidates = [
+      'video/mp4;codecs=avc1.42E01E',
+      'video/mp4',
+      'video/webm;codecs=vp9',
+      'video/webm',
+    ];
+    for (const c of candidates) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
+    }
+    return null;
+  }
+
+  recBtn.addEventListener('click', () => {
+    if (!assetsReady) return;
+    const mime = pickMime();
+    if (!mime) { statusEl.textContent = 'Tu navegador no soporta grabación. Usa Chrome.'; return; }
+    const isMp4 = mime.startsWith('video/mp4');
+    mode = 'recording';
+    recBtn.disabled = true;
+
+    const stream = cv.captureStream(FPS);
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 14_000_000 });
+    const chunks = [];
+    rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = () => {
+      const blob = new Blob(chunks, { type: mime.split(';')[0] });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = isMp4 ? 'aqua-signature-reel.mp4' : 'aqua-signature-reel.webm';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      statusEl.textContent = '✅ ¡Descargado! Revisa tu carpeta de Descargas.';
+      if (!isMp4) hintEl.style.display = 'block';
+      progEl.style.width = '0%';
+      recBtn.disabled = false;
+      mode = 'preview';
+      previewStart = performance.now();
+    };
+
+    const t0 = performance.now();
+    rec.start(500);
+    statusEl.textContent = 'Grabando… 0 / 30 s';
+
+    function recLoop(now) {
+      const t = (now - t0) / 1000;
+      if (t >= DUR) {
+        renderFrame(DUR - 0.001);
+        setTimeout(() => rec.stop(), 200);
+        statusEl.textContent = 'Procesando…';
+        progEl.style.width = '100%';
+        return;
+      }
+      renderFrame(t);
+      statusEl.textContent = `Grabando… ${Math.floor(t)} / 30 s`;
+      progEl.style.width = (t / DUR * 100).toFixed(1) + '%';
+      requestAnimationFrame(recLoop);
+    }
+    requestAnimationFrame(recLoop);
+  });
+
+  // ── Boot ──────────────────────────────────────────────────────────────────
+  Promise.all([
+    loadAssets(),
+    document.fonts.load('italic 500 104px "Cormorant Garamond"'),
+    document.fonts.load('24px "JetBrains Mono"'),
+    document.fonts.load('26px Cinzel'),
+  ]).then(() => {
+    assetsReady = true;
+    previewStart = performance.now();
+    statusEl.textContent = 'Vista previa en bucle — listo para grabar.';
+  });
+})();
+</script>
+</body>
+</html>

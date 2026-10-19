@@ -66,7 +66,9 @@ function db(array $config): PDO {
     static $pdo = null;
     if ($pdo instanceof PDO) return $pdo;
 
-    $path = $config['db_path'] ?? (__DIR__ . '/data/inventory.sqlite');
+    /* AQUA_INV_DB lets a test run work on a COPY of the database. Production
+     * never sets it; anyone who can set env vars already owns the process. */
+    $path = getenv('AQUA_INV_DB') ?: ($config['db_path'] ?? (__DIR__ . '/data/inventory.sqlite'));
     $dir  = dirname($path);
     if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
         fail('Cannot create the data directory.', 500, 'no_data_dir');
@@ -136,6 +138,36 @@ function migrate(PDO $pdo): void {
         $pdo->exec('ALTER TABLE skus ADD COLUMN unit_cost INTEGER NOT NULL DEFAULT 0');
     }
 
+    /* Price snapshots. A movement has to remember what a unit was worth when
+     * it happened, or re-pricing a SKU would silently rewrite last month's
+     * reported sales. Existing rows are backfilled once, from the SKU's
+     * current values — the best estimate available after the fact. */
+    $mv = array_column($pdo->query('PRAGMA table_info(movements)')->fetchAll(), 'name');
+    if (!in_array('unit_price', $mv, true)) {
+        $pdo->exec('ALTER TABLE movements ADD COLUMN unit_price INTEGER NOT NULL DEFAULT 0');
+        $pdo->exec('UPDATE movements SET unit_price =
+                      COALESCE((SELECT list_price FROM skus WHERE skus.id = movements.sku_id), 0)');
+    }
+    if (!in_array('unit_cost', $mv, true)) {
+        $pdo->exec('ALTER TABLE movements ADD COLUMN unit_cost INTEGER NOT NULL DEFAULT 0');
+        $pdo->exec('UPDATE movements SET unit_cost =
+                      COALESCE((SELECT unit_cost FROM skus WHERE skus.id = movements.sku_id), 0)');
+    }
+    if (!in_array('itbis_rate', $mv, true)) {
+        $pdo->exec('ALTER TABLE movements ADD COLUMN itbis_rate REAL NOT NULL DEFAULT 0');
+        $st = $pdo->prepare('UPDATE movements SET itbis_rate = ?');
+        $st->execute([itbis_rate($GLOBALS['config'])]);
+    }
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS period_closes (
+            period       TEXT PRIMARY KEY,          -- 'YYYY-MM'
+            closed_at    TEXT NOT NULL,
+            closed_by    TEXT NOT NULL DEFAULT '',
+            totals_json  TEXT NOT NULL,
+            per_sku_json TEXT NOT NULL
+        )");
+
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_mov_sku     ON movements(sku_id)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_mov_created ON movements(id DESC)');
 }
@@ -147,6 +179,200 @@ function now(): string { return gmdate('Y-m-d H:i:s'); }
 function itbis_rate(array $config): float {
     $r = $config['itbis_rate'] ?? 0.18;
     return (is_numeric($r) && $r >= 0 && $r <= 1) ? (float)$r : 0.18;
+}
+
+
+/* ------------------------------------------------------------------ *
+ * Periods
+ *
+ * Every figure below is derived from the price SNAPSHOT on each movement,
+ * never from the SKU's current price. Re-pricing a product must not move
+ * a number in a month that has already been reported.
+ * ------------------------------------------------------------------ */
+
+function this_month(): string { return gmdate('Y-m'); }
+
+function month_add(string $ym, int $n): string {
+    [$y, $m] = array_map('intval', explode('-', $ym));
+    $t = ($y * 12 + ($m - 1)) + $n;
+    return sprintf('%04d-%02d', intdiv($t, 12), ($t % 12) + 1);
+}
+function month_start(string $ym): string { return $ym . '-01 00:00:00'; }
+
+/* Resolve a period spec into bounds. Accepts YYYY-MM, YYYY-Qn, YYYY, all. */
+function period_bounds(string $key): array {
+    if ($key === 'all') {
+        return ['kind' => 'all', 'key' => 'all', 'from' => '0000-01-01 00:00:00',
+                'to' => '9999-12-31 23:59:59', 'months' => []];
+    }
+    if (preg_match('/^(\d{4})-Q([1-4])$/', $key, $m)) {
+        $first = sprintf('%04d-%02d', (int)$m[1], (((int)$m[2] - 1) * 3) + 1);
+        $months = [$first, month_add($first, 1), month_add($first, 2)];
+        return ['kind' => 'quarter', 'key' => $key, 'from' => month_start($first),
+                'to' => month_start(month_add($first, 3)), 'months' => $months];
+    }
+    if (preg_match('/^(\d{4})$/', $key)) {
+        $months = [];
+        for ($i = 1; $i <= 12; $i++) $months[] = sprintf('%s-%02d', $key, $i);
+        return ['kind' => 'year', 'key' => $key, 'from' => $key . '-01-01 00:00:00',
+                'to' => ((int)$key + 1) . '-01-01 00:00:00', 'months' => $months];
+    }
+    if (preg_match('/^\d{4}-\d{2}$/', $key)) {
+        return ['kind' => 'month', 'key' => $key, 'from' => month_start($key),
+                'to' => month_start(month_add($key, 1)), 'months' => [$key]];
+    }
+    fail('Unknown period.', 422, 'bad_period');
+}
+
+function blank_figures(): array {
+    return ['produced' => 0, 'delivered' => 0, 'written_off' => 0,
+            'sales' => 0, 'itbis' => 0, 'cogs' => 0, 'profit' => 0,
+            // sales whose movement carried no cost basis: profit on these is
+            // overstated, and the UI says so rather than quietly inflating
+            'uncosted_sales' => 0,
+            'opening_units' => 0, 'opening_value' => 0,
+            'closing_units' => 0, 'closing_value' => 0];
+}
+
+/* Stock level and cost basis as of an instant, taken from the last movement
+ * before it — the ledger is the only record of what was on the shelf then. */
+function stock_at(PDO $pdo, string $instant): array {
+    $st = $pdo->prepare(
+        'SELECT m.sku_id, m.on_hand_after, m.unit_cost
+           FROM movements m
+           JOIN (SELECT sku_id, MAX(id) AS mid FROM movements
+                  WHERE created_at < ? GROUP BY sku_id) x ON x.mid = m.id');
+    $st->execute([$instant]);
+    $out = [];
+    foreach ($st->fetchAll() as $r) {
+        $out[(int)$r['sku_id']] = ['units' => (int)$r['on_hand_after'],
+                                   'cost'  => (int)$r['unit_cost']];
+    }
+    return $out;
+}
+
+/* Compute a window straight from the ledger. */
+function compute_window(PDO $pdo, string $from, string $to): array {
+    $perSku = [];
+    $get = function (int $id) use (&$perSku) {
+        if (!isset($perSku[$id])) $perSku[$id] = blank_figures();
+        return $id;
+    };
+
+    $st = $pdo->prepare(
+        'SELECT sku_id, type, qty, unit_price, unit_cost, itbis_rate
+           FROM movements WHERE created_at >= ? AND created_at < ?');
+    $st->execute([$from, $to]);
+    foreach ($st->fetchAll() as $r) {
+        $id = $get((int)$r['sku_id']);
+        $qty = (int)$r['qty'];
+        switch ($r['type']) {
+            case 'produced':
+                $perSku[$id]['produced'] += $qty;
+                break;
+            case 'write_off':
+                $perSku[$id]['written_off'] += $qty;
+                break;
+            case 'delivered':
+                $line = $qty * (int)$r['unit_price'];
+                $perSku[$id]['delivered'] += $qty;
+                $perSku[$id]['sales']     += $line;
+                $perSku[$id]['itbis']     += (int)round($line * (float)$r['itbis_rate']);
+                $perSku[$id]['cogs']      += $qty * (int)$r['unit_cost'];
+                if ((int)$r['unit_cost'] === 0) $perSku[$id]['uncosted_sales'] += $line;
+                break;
+        }
+    }
+
+    $open  = stock_at($pdo, $from);
+    $close = stock_at($pdo, $to);
+    foreach (array_keys($open + $close) as $id) {
+        $get((int)$id);
+    }
+    foreach ($perSku as $id => &$f) {
+        $f['opening_units'] = $open[$id]['units']  ?? 0;
+        $f['opening_value'] = ($open[$id]['units'] ?? 0) * ($open[$id]['cost'] ?? 0);
+        $f['closing_units'] = $close[$id]['units'] ?? 0;
+        $f['closing_value'] = ($close[$id]['units'] ?? 0) * ($close[$id]['cost'] ?? 0);
+        $f['profit']        = $f['sales'] - $f['cogs'];
+    }
+    unset($f);
+
+    return ['per_sku' => $perSku, 'totals' => sum_figures($perSku)];
+}
+
+function sum_figures(array $perSku): array {
+    $t = blank_figures();
+    foreach ($perSku as $f) {
+        foreach ($t as $k => $_) $t[$k] += $f[$k] ?? 0;
+    }
+    $t['profit'] = $t['sales'] - $t['cogs'];
+    return $t;
+}
+
+/* Add b into a, key by key — used to fold closed months into a quarter/year. */
+function merge_per_sku(array $a, array $b): array {
+    foreach ($b as $id => $f) {
+        if (!isset($a[$id])) { $a[$id] = $f; continue; }
+        foreach ($f as $k => $v) {
+            // stock levels are points in time, not sums
+            if ($k === 'opening_units' || $k === 'opening_value') continue;
+            if ($k === 'closing_units' || $k === 'closing_value') { $a[$id][$k] = $v; continue; }
+            $a[$id][$k] = ($a[$id][$k] ?? 0) + $v;
+        }
+    }
+    return $a;
+}
+
+function closed_months(PDO $pdo): array {
+    $out = [];
+    foreach ($pdo->query('SELECT * FROM period_closes')->fetchAll() as $r) {
+        $out[$r['period']] = $r;
+    }
+    return $out;
+}
+
+/* A closed month is final: its stored snapshot is what reports read. */
+function month_figures(PDO $pdo, string $ym, array $closed): array {
+    if (isset($closed[$ym])) {
+        return ['per_sku' => json_decode($closed[$ym]['per_sku_json'], true) ?: [],
+                'totals'  => json_decode($closed[$ym]['totals_json'], true) ?: blank_figures(),
+                'closed'  => true];
+    }
+    $b = period_bounds($ym);
+    $w = compute_window($pdo, $b['from'], $b['to']);
+    $w['closed'] = false;
+    return $w;
+}
+
+function close_month(PDO $pdo, string $ym, string $by): void {
+    $b = period_bounds($ym);
+    $w = compute_window($pdo, $b['from'], $b['to']);
+    $st = $pdo->prepare(
+        'INSERT OR IGNORE INTO period_closes (period, closed_at, closed_by, totals_json, per_sku_json)
+         VALUES (?, ?, ?, ?, ?)');
+    $st->execute([$ym, now(), $by,
+                  json_encode($w['totals'], JSON_UNESCAPED_UNICODE),
+                  json_encode($w['per_sku'], JSON_UNESCAPED_UNICODE)]);
+}
+
+/* Called on every authenticated request: once the calendar rolls over, every
+ * earlier month that is still open gets sealed. */
+function auto_close(PDO $pdo, array $config): array {
+    $first = $pdo->query('SELECT MIN(created_at) FROM movements')->fetchColumn();
+    if (!$first) return [];
+    $ym      = substr((string)$first, 0, 7);
+    $current = this_month();
+    $closed  = closed_months($pdo);
+    $done    = [];
+    for ($i = 0; $i < 240 && $ym < $current; $i++) {
+        if (!isset($closed[$ym])) {
+            close_month($pdo, $ym, (string)($config['default_user'] ?? 'auto'));
+            $done[] = $ym;
+        }
+        $ym = month_add($ym, 1);
+    }
+    return $done;
 }
 
 // ---------------------------------------------------------------- helpers
@@ -237,6 +463,7 @@ case 'logout':
 case 'state': {
     require_auth();
     $pdo  = $pdoLazy();
+    auto_close($pdo, $config);
     $skus = $pdo->query(
         'SELECT * FROM skus ORDER BY product, finish'
     )->fetchAll();
@@ -308,6 +535,17 @@ case 'movement': {
     if ($qty < 0)                                fail('Quantity cannot be negative.', 422, 'bad_qty');
     if ($qty === 0 && $type !== 'count')         fail('Quantity must be at least 1.', 422, 'bad_qty');
     if ($qty > 1000000)                          fail('Quantity is implausibly large.', 422, 'bad_qty');
+
+    /* A closed month is history. Movements are always stamped with the
+     * current time, so this bites when someone closes the month they are
+     * still working in — which is exactly when it should. */
+    $month = substr(now(), 0, 7);
+    $seal  = $pdo->prepare('SELECT closed_at FROM period_closes WHERE period = ?');
+    $seal->execute([$month]);
+    if ($closedAt = $seal->fetchColumn()) {
+        fail("The month $month was closed on $closedAt and no longer accepts movements.",
+             409, 'period_closed', ['period' => $month, 'closed_at' => $closedAt]);
+    }
 
     // IMMEDIATE takes the write lock up front, so a concurrent movement on
     // the same SKU waits instead of computing from a stale read.
@@ -381,13 +619,18 @@ case 'movement': {
 
         $mv = $pdo->prepare(
             'INSERT INTO movements (sku_id, type, qty, delta_on_hand, delta_reserved,
-                                    on_hand_after, client_ref, note, user_label, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                                    on_hand_after, unit_price, unit_cost, itbis_rate,
+                                    client_ref, note, user_label, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $mv->execute([
             $skuId, $type, $qty,
             $newOnHand - $onHand,
             $newReserved - $reserved,
             $newOnHand,
+            // prices as they stand right now, frozen onto the row
+            (int)$sku['list_price'],
+            (int)($sku['unit_cost'] ?? 0),
+            itbis_rate($config),
             str_field($in, 'client_ref', 160),
             str_field($in, 'note', 500),
             str_field($in, 'user_label', 40) ?: (string)($config['default_user'] ?? ''),
@@ -405,6 +648,106 @@ case 'movement': {
         fail('The movement was rejected by the database.', 500, 'db_error');
     }
 }
+
+case 'report': {
+    require_auth();
+    $pdo  = $pdoLazy();
+    auto_close($pdo, $config);
+
+    $key    = (string)($_GET['period'] ?? this_month());
+    $b      = period_bounds($key);
+    $closed = closed_months($pdo);
+    $rate   = itbis_rate($config);
+    $now    = this_month();
+
+    if ($b['kind'] === 'all') {
+        $w = compute_window($pdo, $b['from'], $b['to']);
+        $perSku = $w['per_sku']; $totals = $w['totals'];
+        $isClosed = false; $closedAt = null; $closedBy = null;
+    } else {
+        /* A quarter or a year is the sum of its months: sealed ones come from
+         * their snapshot, the open one is computed live. Months in the future
+         * contribute nothing. */
+        $perSku = []; $monthly = [];
+        foreach ($b['months'] as $ym) {
+            if ($ym > $now) { $monthly[$ym] = blank_figures(); continue; }
+            $m = month_figures($pdo, $ym, $closed);
+            $monthly[$ym] = $m['totals'];
+            $perSku = merge_per_sku($perSku, $m['per_sku']);
+        }
+        $totals = sum_figures($perSku);
+        // opening comes from the first month, closing from the last
+        $firstM = $b['months'][0];
+        $lastM  = end($b['months']);
+        $fb = period_bounds($firstM); $lb = period_bounds(min($lastM, $now) === $lastM ? $lastM : $now);
+        $openStock  = stock_at($pdo, $fb['from']);
+        $closeStock = stock_at($pdo, $lb['to']);
+        $totals['opening_units'] = array_sum(array_column($openStock, 'units'));
+        $totals['opening_value'] = array_sum(array_map(fn($x) => $x['units'] * $x['cost'], $openStock));
+        $totals['closing_units'] = array_sum(array_column($closeStock, 'units'));
+        $totals['closing_value'] = array_sum(array_map(fn($x) => $x['units'] * $x['cost'], $closeStock));
+        foreach ($perSku as $id => &$f) {
+            $f['opening_units'] = $openStock[$id]['units']  ?? 0;
+            $f['opening_value'] = ($openStock[$id]['units'] ?? 0) * ($openStock[$id]['cost'] ?? 0);
+            $f['closing_units'] = $closeStock[$id]['units'] ?? 0;
+            $f['closing_value'] = ($closeStock[$id]['units'] ?? 0) * ($closeStock[$id]['cost'] ?? 0);
+        }
+        unset($f);
+
+        $isClosed = $b['kind'] === 'month' && isset($closed[$key]);
+        $closedAt = $isClosed ? $closed[$key]['closed_at'] : null;
+        $closedBy = $isClosed ? $closed[$key]['closed_by'] : null;
+    }
+
+    /* YTD: twelve months of the selected year, each either sealed, live, or
+     * not reached yet. The chart renders the last state as empty bars. */
+    $year = $b['kind'] === 'all' ? (int)gmdate('Y') : (int)substr($b['key'], 0, 4);
+    $ytd = []; $run = ['sales' => 0, 'profit' => 0];
+    for ($i = 1; $i <= 12; $i++) {
+        $ym = sprintf('%04d-%02d', $year, $i);
+        $reached = $ym <= $now;
+        $f = $reached ? month_figures($pdo, $ym, $closed)['totals'] : blank_figures();
+        if ($reached) { $run['sales'] += $f['sales']; $run['profit'] += $f['profit']; }
+        $ytd[] = ['month' => $ym, 'reached' => $reached, 'closed' => isset($closed[$ym]),
+                  'sales' => $f['sales'], 'profit' => $f['profit'],
+                  'run_sales' => $run['sales'], 'run_profit' => $run['profit']];
+    }
+
+    out(['ok' => true, 'itbis_rate' => $rate,
+         'period' => ['key' => $b['key'], 'kind' => $b['kind'],
+                      'from' => $b['from'], 'to' => $b['to'],
+                      'closed' => $isClosed, 'closed_at' => $closedAt, 'closed_by' => $closedBy],
+         'totals' => $totals, 'per_sku' => $perSku, 'ytd' => $ytd,
+         'ytd_sales' => $run['sales'], 'ytd_profit' => $run['profit']]);
+}
+
+case 'close_month': {
+    require_post();
+    $pdo = $pdoLazy();
+    $ym  = str_field(body(), 'period', 7);
+    if (!preg_match('/^\d{4}-\d{2}$/', $ym)) fail('Expected a month like 2026-10.', 422, 'bad_period');
+    if ($ym > this_month())                  fail('That month has not happened yet.', 422, 'future_period');
+
+    $closed = closed_months($pdo);
+    if (isset($closed[$ym])) fail("$ym is already closed.", 409, 'already_closed', ['period' => $ym]);
+
+    close_month($pdo, $ym, str_field(body(), 'user_label', 40) ?: (string)($config['default_user'] ?? ''));
+    $c = closed_months($pdo)[$ym] ?? null;
+    out(['ok' => true, 'period' => $ym, 'closed_at' => $c['closed_at'] ?? null]);
+}
+
+case 'closes': {
+    require_auth();
+    $pdo = $pdoLazy();
+    auto_close($pdo, $config);
+    $rows = [];
+    foreach (closed_months($pdo) as $k => $r) {
+        $rows[] = ['period' => $k, 'closed_at' => $r['closed_at'], 'closed_by' => $r['closed_by'],
+                   'totals' => json_decode($r['totals_json'], true)];
+    }
+    out(['ok' => true, 'closes' => $rows, 'this_month' => this_month()]);
+}
+
 
 case 'sku_create': {
     require_post();

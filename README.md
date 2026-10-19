@@ -260,6 +260,37 @@ show an em dash and a prompt to add a cost, rather than a fabricated 100%
 margin, and the summary's **Potential profit** excludes those SKUs (it says
 so under the figure).
 
+### Periods and closing a month
+
+The ledger and the full report are both scoped to a **period** — month,
+quarter, year or all time — chosen in the header and remembered per browser.
+Stock-on-hand columns always show the **live** count; the period columns show
+**activity in that period**, and the table header labels which is which.
+
+Every period figure is derived from a **price snapshot** taken at the moment
+each movement was recorded (`unit_price`, `unit_cost`, `itbis_rate` on the
+movement row), never from the SKU's current price. Re-pricing a product
+therefore cannot change a number in a month you have already reported.
+
+**Closing.** The first request in a new month automatically closes every
+earlier month that is still open, storing that month's totals and per-SKU
+figures in `period_closes`. A closed month is final: reports read the stored
+snapshot rather than recomputing. There is also a manual **Close month**
+button.
+
+Closing a month **locks it** — any movement whose timestamp falls in it is
+refused with a 409. Movements always use the current time, so in practice
+this bites only when you close the month you are still working in. That is
+deliberate, but it does mean: don't close the current month until you have
+finished entering it.
+
+A quarter or a year is the sum of its closed months plus the open current
+one, so **YTD always equals the sum of the monthly figures**.
+
+A `unit_cost` of 0 still means "not entered". Where sales have no cost basis
+the period profit is overstated, and both the ledger and the report say so
+explicitly, naming the amount.
+
 ### Changing the staff password
 
 Generate a new hash and replace the `password_hash` value in
@@ -282,6 +313,14 @@ SQLite's own backup, which is consistent and safe to run while the app is in use
 
 ```bash
 sqlite3 inventory/data/inventory.sqlite ".backup '/path/to/aqua-inv-$(date +%F).sqlite'"
+```
+
+To try something against real data without risking it, copy the file and point
+the API at the copy — `AQUA_INV_DB` overrides the configured path:
+
+```bash
+cp inventory/data/inventory.sqlite /tmp/try.sqlite
+AQUA_INV_DB=/tmp/try.sqlite php -S localhost:8001
 ```
 
 If `sqlite3` is unavailable, copy all three files together

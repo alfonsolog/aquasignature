@@ -237,6 +237,9 @@ a { color: inherit; text-decoration: none; }
   display: flex; flex-direction: column; gap: 6px;
   border: 1px solid var(--rule); border-width: 0 1px 1px 0;
 }
+/* 7 cells rarely divide evenly into the auto-fit row; let the last one run
+   to the end so the strip never ends on a hanging empty slot. */
+.inv-sum__cell:last-child { grid-column: auto / -1; }
 .inv-sum__cell.warn { background: var(--warn-bg); }
 .inv-sum__cell.warn .inv-sum__n { color: var(--warn); }
 .inv-sum__note { font-size: 9px; color: var(--muted); letter-spacing: 0; text-transform: none; }

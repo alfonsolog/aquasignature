@@ -1237,7 +1237,6 @@ function InventoryApp() {
 
         <h2 className="inv-groupcap">{t("inv.sum.period")} · {periodLabel(period, lang, t)}</h2>
         <PeriodSummary report={report} />
-        <YtdChart ytd={report && report.ytd} />
 
         <div className="inv-bar">
           <div className="inv-tabs">

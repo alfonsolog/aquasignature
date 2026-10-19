@@ -236,6 +236,30 @@ constraints).
 Editing a SKU deliberately **cannot** change stock levels: record a `count`
 instead, so the ledger stays the whole explanation of what is on the shelf.
 
+### Tax (ITBIS) and production cost
+
+`list_price` is the price **before** tax. Each SKU also carries a
+`unit_cost` (what it costs you to make one), and the app derives everything
+else from those two numbers in a single helper, so the panel, the ledger,
+the summary and the CSV can never disagree:
+
+```
+itbis            = list_price × rate
+price_with_itbis = list_price + itbis
+profit per unit  = list_price − unit_cost
+margin %         = profit / list_price
+```
+
+The rate lives in `inventory/config.php` as `itbis_rate` (default `0.18`)
+and is sent to the browser by the API — it is never written into the JSX.
+Change it in that one file. An install whose `config.php` predates this
+setting keeps working and falls back to 18%.
+
+A `unit_cost` of `0` means "not entered yet", not "free": profit and margin
+show an em dash and a prompt to add a cost, rather than a fabricated 100%
+margin, and the summary's **Potential profit** excludes those SKUs (it says
+so under the figure).
+
 ### Changing the staff password
 
 Generate a new hash and replace the `password_hash` value in

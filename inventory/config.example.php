@@ -9,6 +9,10 @@ return [
     // Output of password_hash() — NOT the password itself.
     'password_hash' => '$2y$12$REPLACE_THIS_WITH_YOUR_OWN_HASH_FROM_THE_COMMAND_ABOVE',
 
+    // Dominican ITBIS. list_price is the price BEFORE tax; the app adds this
+    // on top. Change it here, never in the JSX.
+    'itbis_rate'    => 0.18,
+
     // Shown against every movement if the browser has no staff initials set.
     'default_user'  => 'taller',
 

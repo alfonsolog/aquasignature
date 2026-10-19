@@ -99,6 +99,7 @@ function migrate(PDO $pdo): void {
             hex           TEXT    NOT NULL DEFAULT '',
             location      TEXT    NOT NULL DEFAULT '',
             list_price    INTEGER NOT NULL DEFAULT 0,
+            unit_cost     INTEGER NOT NULL DEFAULT 0,
             reorder_point INTEGER NOT NULL DEFAULT 0,
             on_hand       INTEGER NOT NULL DEFAULT 0,
             reserved      INTEGER NOT NULL DEFAULT 0,
@@ -108,6 +109,7 @@ function migrate(PDO $pdo): void {
             CHECK (reserved >= 0),
             CHECK (reserved <= on_hand),
             CHECK (list_price >= 0),
+            CHECK (unit_cost >= 0),
             CHECK (reorder_point >= 0)
         )");
     $pdo->exec("
@@ -124,11 +126,28 @@ function migrate(PDO $pdo): void {
             user_label     TEXT    NOT NULL DEFAULT '',
             created_at     TEXT    NOT NULL
         )");
+    /* Additive migrations for databases created before a column existed.
+     * SQLite's ALTER TABLE cannot attach a CHECK to an existing table, so a
+     * migrated database relies on the API's own max(0, ...) validation for
+     * unit_cost while a fresh one also has the constraint above. Both reject
+     * negatives; only the enforcement point differs. */
+    $have = array_column($pdo->query('PRAGMA table_info(skus)')->fetchAll(), 'name');
+    if (!in_array('unit_cost', $have, true)) {
+        $pdo->exec('ALTER TABLE skus ADD COLUMN unit_cost INTEGER NOT NULL DEFAULT 0');
+    }
+
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_mov_sku     ON movements(sku_id)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_mov_created ON movements(id DESC)');
 }
 
 function now(): string { return gmdate('Y-m-d H:i:s'); }
+
+/* Falls back to 18% so an install whose config.php predates this setting
+ * keeps working instead of pricing everything at 0% tax. */
+function itbis_rate(array $config): float {
+    $r = $config['itbis_rate'] ?? 0.18;
+    return (is_numeric($r) && $r >= 0 && $r <= 1) ? (float)$r : 0.18;
+}
 
 // ---------------------------------------------------------------- helpers
 
@@ -222,27 +241,39 @@ case 'state': {
         'SELECT * FROM skus ORDER BY product, finish'
     )->fetchAll();
 
+    $rate = itbis_rate($config);
     $units = $res = $value = 0;
-    $needs = 0;
+    $costValue = $profit = 0;
+    $needs = $missingCost = 0;
     foreach ($skus as &$s) {
         $s['id']            = (int)$s['id'];
         $s['list_price']    = (int)$s['list_price'];
+        $s['unit_cost']     = (int)($s['unit_cost'] ?? 0);
         $s['reorder_point'] = (int)$s['reorder_point'];
         $s['on_hand']       = (int)$s['on_hand'];
         $s['reserved']      = (int)$s['reserved'];
         $s['available']     = $s['on_hand'] - $s['reserved'];
         $s['status']        = $s['on_hand'] === 0 ? 'out'
                             : ($s['available'] <= $s['reorder_point'] ? 'low' : 'ok');
-        $units += $s['on_hand'];
-        $res   += $s['reserved'];
-        $value += $s['on_hand'] * $s['list_price'];
+        $units     += $s['on_hand'];
+        $res       += $s['reserved'];
+        $value     += $s['on_hand'] * $s['list_price'];
+        $costValue += $s['on_hand'] * $s['unit_cost'];
+        if ($s['unit_cost'] > 0) {
+            // Only SKUs with a real cost contribute, otherwise a missing cost
+            // would be read as pure profit and overstate the total.
+            $profit += $s['on_hand'] * ($s['list_price'] - $s['unit_cost']);
+        } else {
+            $missingCost++;
+        }
         if ($s['status'] !== 'ok') $needs++;
     }
     unset($s);
 
-    out(['ok' => true, 'skus' => $skus, 'summary' => [
+    out(['ok' => true, 'skus' => $skus, 'itbis_rate' => $rate, 'summary' => [
         'skus' => count($skus), 'on_hand' => $units, 'reserved' => $res,
-        'value' => $value, 'needs_production' => $needs,
+        'value' => $value, 'cost_value' => $costValue, 'profit' => $profit,
+        'needs_production' => $needs, 'missing_cost' => $missingCost,
     ]]);
 }
 
@@ -398,12 +429,14 @@ case 'sku_create': {
         $pdo->exec('BEGIN IMMEDIATE');
         $st = $pdo->prepare(
             'INSERT INTO skus (code, product, finish, hex, location, list_price,
-                               reorder_point, on_hand, reserved, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                               unit_cost, reorder_point, on_hand, reserved,
+                               created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $st->execute([
             $code, $product, $finish, $hex,
             str_field($in, 'location', 80),
             max(0, int_field($in, 'list_price')),
+            max(0, int_field($in, 'unit_cost')),
             max(0, int_field($in, 'reorder_point')),
             $onHand, $reserved, $now, $now,
         ]);
@@ -457,12 +490,14 @@ case 'sku_update': {
     try {
         $up = $pdo->prepare(
             'UPDATE skus SET code = ?, product = ?, finish = ?, hex = ?, location = ?,
-                             list_price = ?, reorder_point = ?, updated_at = ?
+                             list_price = ?, unit_cost = ?, reorder_point = ?,
+                             updated_at = ?
              WHERE id = ?');
         $up->execute([
             $code, $product, $finish, $hex,
             str_field($in, 'location', 80),
             max(0, int_field($in, 'list_price')),
+            max(0, int_field($in, 'unit_cost')),
             max(0, int_field($in, 'reorder_point')),
             now(), $id,
         ]);

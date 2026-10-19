@@ -14,6 +14,38 @@ const MV_TYPES  = ["produced", "delivered", "reserve", "release", "count", "writ
 
 const rd = (n) => "RD$ " + Number(n || 0).toLocaleString("en-US");
 
+/* Every money figure in the app comes from here, so the panel, the ledger,
+ * the summary and the CSV can never disagree.
+ *
+ * list_price is the price BEFORE tax. A unit_cost of 0 means "not entered
+ * yet", not "free": profit and margin come back null so the UI can print an
+ * em dash rather than claiming a 100% margin on an unknown cost. */
+function finance(sku, rate) {
+  const list   = Number(sku.list_price) || 0;
+  const cost   = Number(sku.unit_cost)  || 0;
+  const onHand = Number(sku.on_hand)    || 0;
+  const hasCost = cost > 0;
+
+  const itbis      = Math.round(list * rate);
+  const withItbis  = list + itbis;
+  const profit     = hasCost ? list - cost : null;
+  const margin     = hasCost && list > 0 ? (profit / list) * 100 : null;
+
+  return {
+    hasCost, cost, list, itbis, withItbis, profit, margin,
+    costValue:   onHand * cost,
+    salesValue:  onHand * list,
+    itbisValue:  onHand * itbis,
+    profitValue: profit === null ? null : onHand * profit,
+  };
+}
+
+const pct = (n) => (n === null || n === undefined) ? "—" : `${n.toFixed(1)}%`;
+/* class for a signed figure; a missing cost is muted, not green */
+const moneyTone = (n) => n === null || n === undefined ? "inv-money--none"
+                       : n > 0 ? "inv-money--up"
+                       : n < 0 ? "inv-money--down" : "inv-money--down";
+
 /* The API answers with a slug plus the numbers involved; the wording is
  * chosen here so staff read it in their own language. Falls back to the
  * server's English text for anything not translated yet. */
@@ -131,19 +163,25 @@ function InvLogin({ onIn }) {
 function InvSummary({ summary }) {
   const { t } = useLang();
   const s = summary || {};
+  const profit = s.profit || 0;
   const cells = [
-    [t("inv.sum.skus"),     s.skus || 0],
-    [t("inv.sum.onhand"),   s.on_hand || 0],
-    [t("inv.sum.reserved"), s.reserved || 0],
-    [t("inv.sum.value"),    rd(s.value)],
-    [t("inv.sum.needs"),    s.needs_production || 0, (s.needs_production || 0) > 0 ? "warn" : ""],
+    [t("inv.sum.skus"),      s.skus || 0],
+    [t("inv.sum.onhand"),    s.on_hand || 0],
+    [t("inv.sum.reserved"),  s.reserved || 0],
+    [t("inv.sum.value"),     rd(s.value)],
+    [t("inv.sum.costvalue"), rd(s.cost_value)],
+    [t("inv.sum.profit"),    rd(profit), "", moneyTone(profit || null),
+     (s.missing_cost || 0) > 0 ? t("inv.sum.profit.note") : ""],
+    [t("inv.sum.needs"),     s.needs_production || 0,
+     (s.needs_production || 0) > 0 ? "warn" : ""],
   ];
   return (
     <div className="inv-sum">
-      {cells.map(([label, value, tone]) => (
+      {cells.map(([label, value, tone, numTone, note]) => (
         <div className={`inv-sum__cell ${tone || ""}`} key={label}>
-          <span className="inv-sum__n">{value}</span>
+          <span className={`inv-sum__n ${numTone || ""}`}>{value}</span>
           <span className="inv-sum__l">{label}</span>
+          {note && <span className="inv-sum__note">{note}</span>}
         </div>
       ))}
     </div>
@@ -152,9 +190,10 @@ function InvSummary({ summary }) {
 
 /* ---------------------------------------------------------------- table */
 
-function InvRow({ sku, onPick, active }) {
+function InvRow({ sku, onPick, active, rate }) {
   const { t } = useLang();
   const finish = sku.finish;
+  const f = finance(sku, rate);
   return (
     <button
       className={`inv-row ${active ? "is-on" : ""} is-${sku.status}`}
@@ -170,7 +209,13 @@ function InvRow({ sku, onPick, active }) {
       <span className="inv-row__n" data-l={t("inv.col.reserved")}>{sku.reserved}</span>
       <span className="inv-row__n inv-row__avail" data-l={t("inv.col.available")}>{sku.available}</span>
       <span className="inv-row__n" data-l={t("inv.col.reorder")}>{sku.reorder_point}</span>
-      <span className="inv-row__n" data-l={t("inv.col.value")}>{rd(sku.on_hand * sku.list_price)}</span>
+      <span className="inv-row__n" data-l={t("inv.col.cost")}>
+        {f.hasCost ? rd(f.cost) : <i className="inv-money--none">—</i>}
+      </span>
+      <span className={`inv-row__n ${moneyTone(f.margin)}`} data-l={t("inv.col.margin")}>
+        {pct(f.margin)}
+      </span>
+      <span className="inv-row__n" data-l={t("inv.col.value")}>{rd(f.salesValue)}</span>
       <span className="inv-row__status" data-l={t("inv.col.status")}>
         <i className={`inv-pill inv-pill--${sku.status}`}>{t(`inv.status.${sku.status}`)}</i>
       </span>
@@ -178,7 +223,7 @@ function InvRow({ sku, onPick, active }) {
   );
 }
 
-function InvTable({ skus, onPick, activeId }) {
+function InvTable({ skus, onPick, activeId, rate }) {
   const { t } = useLang();
   const groups = useMemo(() => {
     const m = new Map();
@@ -203,11 +248,14 @@ function InvTable({ skus, onPick, activeId }) {
             <span>{t("inv.col.item")}</span><span>{t("inv.col.code")}</span>
             <span>{t("inv.col.location")}</span><span className="inv-row__n">{t("inv.col.onhand")}</span>
             <span className="inv-row__n">{t("inv.col.reserved")}</span><span className="inv-row__n">{t("inv.col.available")}</span>
-            <span className="inv-row__n">{t("inv.col.reorder")}</span><span className="inv-row__n">{t("inv.col.value")}</span>
+            <span className="inv-row__n">{t("inv.col.reorder")}</span>
+            <span className="inv-row__n">{t("inv.col.cost")}</span>
+            <span className="inv-row__n">{t("inv.col.margin")}</span>
+            <span className="inv-row__n">{t("inv.col.value")}</span>
             <span>{t("inv.col.status")}</span>
           </div>
           {rows.map((s) => (
-            <InvRow key={s.id} sku={s} onPick={onPick} active={s.id === activeId} />
+            <InvRow key={s.id} sku={s} onPick={onPick} active={s.id === activeId} rate={rate} />
           ))}
         </section>
       ))}
@@ -228,6 +276,7 @@ function InvSkuForm({ sku, csrf, onDone, onCancel }) {
     hex: sku ? sku.hex : "",
     location: sku ? sku.location : "",
     list_price: sku ? String(sku.list_price) : "",
+    unit_cost: sku ? String(sku.unit_cost || 0) : "0",
     reorder_point: sku ? String(sku.reorder_point) : "4",
     on_hand: "0",
   }));
@@ -242,6 +291,7 @@ function InvSkuForm({ sku, csrf, onDone, onCancel }) {
     const body = {
       ...f,
       list_price: Number(f.list_price) || 0,
+      unit_cost: Number(f.unit_cost) || 0,
       reorder_point: Number(f.reorder_point) || 0,
       on_hand: editing ? undefined : (Number(f.on_hand) || 0),
       user_label: localStorage.getItem("aqua_inv_user") || "",
@@ -274,6 +324,7 @@ function InvSkuForm({ sku, csrf, onDone, onCancel }) {
         {field("hex", t("inv.sku.hex"), { placeholder: "#D9C29B" })}
         {field("location", t("inv.sku.location"))}
         {field("list_price", t("inv.sku.price"), { type: "number", min: "0", inputMode: "numeric" })}
+        {field("unit_cost", t("inv.sku.cost"), { type: "number", min: "0", inputMode: "numeric" })}
         {field("reorder_point", t("inv.sku.reorder"), { type: "number", min: "0", inputMode: "numeric" })}
         {!editing && field("on_hand", t("inv.sku.onhand"), { type: "number", min: "0", inputMode: "numeric" })}
       </div>
@@ -289,7 +340,53 @@ function InvSkuForm({ sku, csrf, onDone, onCancel }) {
 
 /* ----------------------------------------------------------- side panel */
 
-function InvPanel({ sku, csrf, onClose, onChanged, onToast }) {
+function InvDetails({ sku, rate }) {
+  const { t } = useLang();
+  const f = finance(sku, rate);
+  const pctLabel = t("inv.f.itbis").replace("{rate}", String(Math.round(rate * 1000) / 10));
+
+  // a missing cost prints an em dash and a nudge, never a fabricated margin
+  const money = (v) => f.hasCost ? rd(v) : <i className="inv-money--none">—</i>;
+  const row = (label, value, tone) => (
+    <div className="inv-dl__row" key={label}>
+      <span className="inv-dl__k">{label}</span>
+      <span className={`inv-dl__v ${tone || ""}`}>{value}</span>
+    </div>
+  );
+
+  return (
+    <div className="inv-details">
+      <h3>{t("inv.det.stock")}</h3>
+      <div className="inv-dl">
+        {row(t("inv.col.onhand"), sku.on_hand)}
+        {row(t("inv.col.reserved"), sku.reserved)}
+        {row(t("inv.col.available"), sku.available, `inv-avail--${sku.status}`)}
+        {row(t("inv.col.reorder"), sku.reorder_point)}
+      </div>
+
+      <h3>{t("inv.det.unit")}</h3>
+      <div className="inv-dl">
+        {row(t("inv.f.cost"), f.hasCost ? rd(f.cost) : <i className="inv-money--none">—</i>)}
+        {row(t("inv.f.list"), rd(f.list))}
+        {row(pctLabel, rd(f.itbis))}
+        {row(t("inv.f.withitbis"), rd(f.withItbis))}
+        {row(t("inv.f.profit"), money(f.profit), moneyTone(f.profit))}
+        {row(t("inv.f.margin"), pct(f.margin), moneyTone(f.margin))}
+      </div>
+      {!f.hasCost && <p className="inv-hint inv-hint--nudge">{t("inv.f.nocost")}</p>}
+
+      <h3>{t("inv.det.totals")}</h3>
+      <div className="inv-dl">
+        {row(t("inv.f.costvalue"), money(f.costValue))}
+        {row(t("inv.f.salesvalue"), rd(f.salesValue))}
+        {row(t("inv.f.itbistotal"), rd(f.itbisValue))}
+        {row(t("inv.f.profittotal"), money(f.profitValue), moneyTone(f.profitValue))}
+      </div>
+    </div>
+  );
+}
+
+function InvPanel({ sku, csrf, onClose, onChanged, onToast, rate }) {
   const { t } = useLang();
   const errText = useErrText();
   const [type, setType]   = useState("produced");
@@ -357,13 +454,22 @@ function InvPanel({ sku, csrf, onClose, onChanged, onToast }) {
             <i className="inv-sw" style={{ background: sku.hex || "transparent" }} aria-hidden="true" />
             {sku.product} · {finish}
           </h2>
+          <div className="inv-panel__meta">
+            <i className={`inv-pill inv-pill--${sku.status}`}>{t(`inv.status.${sku.status}`)}</i>
+            <span className="t-mono">{sku.location || "—"}</span>
+          </div>
         </div>
         <button className="inv-x" onClick={onClose} aria-label={t("inv.panel.close")}>×</button>
       </header>
 
       <div className="inv-figs">
-        {[["inv.col.onhand", sku.on_hand], ["inv.col.reserved", sku.reserved], ["inv.col.available", sku.available]].map(([k, v]) => (
-          <div key={k}><span className="inv-figs__n">{v}</span><span className="inv-figs__l">{t(k)}</span></div>
+        {[["inv.col.onhand", sku.on_hand, ""],
+          ["inv.col.reserved", sku.reserved, ""],
+          ["inv.col.available", sku.available, `inv-avail--${sku.status}`]].map(([k, v, tone]) => (
+          <div key={k}>
+            <span className={`inv-figs__n ${tone}`}>{v}</span>
+            <span className="inv-figs__l">{t(k)}</span>
+          </div>
         ))}
       </div>
 
@@ -375,6 +481,8 @@ function InvPanel({ sku, csrf, onClose, onChanged, onToast }) {
         />
       ) : (
         <>
+          <InvDetails sku={sku} rate={rate} />
+
           <form className="inv-move" onSubmit={record}>
             <h3>{t("inv.panel.movement")}</h3>
             <div className="inv-types">
@@ -431,7 +539,9 @@ function InvPanel({ sku, csrf, onClose, onChanged, onToast }) {
               {hist.map((m) => (
                 <div className="inv-hist__row" key={m.id}>
                   <span className={`inv-tag inv-tag--${m.type}`}>{t(`inv.mv.${m.type}`)}</span>
-                  <span className="t-mono">{m.delta_on_hand > 0 ? "+" : ""}{m.delta_on_hand}</span>
+                  <span className={`t-mono ${m.delta_on_hand > 0 ? "inv-delta--up" : m.delta_on_hand < 0 ? "inv-delta--down" : "inv-delta--flat"}`}>
+                    {m.delta_on_hand > 0 ? "+" : ""}{m.delta_on_hand}
+                  </span>
                   <span className="inv-hist__meta">{m.client_ref || m.note || "—"}</span>
                   <span className="t-mono inv-hist__when">{m.created_at.slice(5, 16)}</span>
                 </div>
@@ -475,7 +585,9 @@ function InvLog({ skus, reloadKey }) {
               <span className="t-mono">{m.code}</span>
               <span><i className={`inv-tag inv-tag--${m.type}`}>{t(`inv.mv.${m.type}`)}</i></span>
               <span className="inv-row__n">{m.qty}</span>
-              <span className="inv-row__n inv-delta">{m.delta_on_hand > 0 ? "+" : ""}{m.delta_on_hand}</span>
+              <span className={`inv-row__n inv-delta ${m.delta_on_hand > 0 ? "inv-delta--up" : m.delta_on_hand < 0 ? "inv-delta--down" : "inv-delta--flat"}`}>
+                {m.delta_on_hand > 0 ? "+" : ""}{m.delta_on_hand}
+              </span>
               <span className="inv-row__n">{m.on_hand_after}</span>
               <span className="inv-logrow__meta">{m.client_ref || m.note || ""}</span>
               <span className="inv-logrow__by t-mono">{m.user_label}</span>
@@ -495,6 +607,7 @@ function InventoryApp() {
   const [ready, setReady]     = useState(false);
   const [skus, setSkus]       = useState([]);
   const [summary, setSummary] = useState(null);
+  const [rate, setRate]       = useState(0.18);   // replaced by the server's value
   const [tab, setTab]         = useState("");
   const [q, setQ]             = useState("");
   const [picked, setPicked]   = useState(null);
@@ -510,6 +623,7 @@ function InventoryApp() {
       const r = await invApi("state");
       setSkus(r.skus);
       setSummary(r.summary);
+      if (typeof r.itbis_rate === "number") setRate(r.itbis_rate);
       setPicked((p) => (p ? r.skus.find((s) => s.id === p.id) || null : null));
     } catch (ex) {
       if (ex.status === 401) { setCsrf(null); }
@@ -549,12 +663,20 @@ function InventoryApp() {
 
   const exportStock = () => {
     const head = ["code", "product", "finish", "location", "on_hand", "reserved",
-                  "available", "reorder_point", "list_price_rd", "stock_value_rd", "status"];
-    const rows = shown.map((s) => [
-      s.code, s.product, s.finish, s.location,
-      s.on_hand, s.reserved, s.available, s.reorder_point,
-      s.list_price, s.on_hand * s.list_price, t(`inv.status.${s.status}`),
-    ]);
+                  "available", "reorder_point", "unit_cost_rd", "list_price_rd",
+                  "itbis_per_unit_rd", "price_with_itbis_rd", "profit_per_unit_rd",
+                  "margin_pct", "stock_value_rd", "status"];
+    const rows = shown.map((s) => {
+      const f = finance(s, rate);
+      return [
+        s.code, s.product, s.finish, s.location,
+        s.on_hand, s.reserved, s.available, s.reorder_point,
+        f.cost, f.list, f.itbis, f.withItbis,
+        f.profit === null ? "" : f.profit,
+        f.margin === null ? "" : f.margin.toFixed(1),
+        f.salesValue, t(`inv.status.${s.status}`),
+      ];
+    });
     downloadCsv(`aqua-stock-${new Date().toISOString().slice(0, 10)}.csv`, [head, ...rows]);
   };
 
@@ -632,7 +754,7 @@ function InventoryApp() {
             </button>
           </div>
         ) : (
-          <InvTable skus={shown} onPick={(s) => { setAdding(false); setPicked(s); }} activeId={picked && picked.id} />
+          <InvTable skus={shown} onPick={(s) => { setAdding(false); setPicked(s); }} activeId={picked && picked.id} rate={rate} />
         )}
 
         <InvLog skus={skus} reloadKey={bump} />
@@ -656,7 +778,7 @@ function InventoryApp() {
 
       {picked && !adding && (
         <InvPanel
-          sku={picked} csrf={csrf}
+          sku={picked} csrf={csrf} rate={rate}
           onClose={() => setPicked(null)}
           onChanged={changed}
           onToast={flash}

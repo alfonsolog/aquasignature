@@ -1,0 +1,17 @@
+# Block the database directory even if the inner .htaccess is ignored,
+# and never serve the config or any stray sqlite file as a download.
+RedirectMatch 404 (?i)/inventory/data/
+<FilesMatch "(?i)\.(sqlite|sqlite3|db|db-wal|db-shm|sqlite-wal|sqlite-shm)$">
+  Require all denied
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+<FilesMatch "^config\.php$">
+  Require all denied
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

@@ -6,3 +6,10 @@ uploads/
 
 # Host/tooling scratch
 .thumbnail
+
+# Inventory app — local data and secrets.
+# Ignore the database itself, but KEEP data/.htaccess tracked: it is what
+# denies HTTP access to the .sqlite file, so it has to deploy.
+inventory/data/*
+!inventory/data/.htaccess
+inventory/config.php

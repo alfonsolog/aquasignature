@@ -160,6 +160,111 @@ project — open it offline, no server needed).
 
 ---
 
+## Inventory (internal)
+
+A staff-only stock app at `/inventory/`. It is **not linked from the public
+nav** and carries `noindex, nofollow`. Same fonts, tokens, logo and EN/ES
+toggle as the public site; it defaults to Spanish.
+
+```
+inventory/
+  index.html          — entry (loads ../src/i18n.jsx + ../src/components.jsx)
+  app.jsx             — the whole UI
+  api.php             — JSON API: auth, stock, movements, SKU CRUD
+  config.example.php  — copy to config.php (gitignored)
+  .htaccess           — denies data/, *.sqlite and config.php over HTTP
+  data/               — gitignored; SQLite lives here
+```
+
+### Setup
+
+1. Create the config from the template and put your own password hash in it:
+
+   ```bash
+   cp inventory/config.example.php inventory/config.php
+   php -r 'echo password_hash("choose-a-staff-password", PASSWORD_DEFAULT), "\n";'
+   ```
+
+   Paste the output into `password_hash` in `inventory/config.php`. The file is
+   gitignored — the password never enters the repository.
+
+2. Serve the project with PHP (the public site is static, but this app is not):
+
+   ```bash
+   php -S localhost:8000
+   ```
+
+3. Open `http://localhost:8000/inventory/`. The first request creates
+   `inventory/data/inventory.sqlite` and seeds the 13 SKUs (Tray ×5 finishes,
+   Box ×4, Bar ×4) at **zero stock**, ready for your real counts.
+
+On the live server `config.php` and `data/` are gitignored, so a `git pull`
+never overwrites them — but it also means **you must create `config.php` on the
+server once, by hand**. Until you do, the app refuses every request with a
+setup error rather than letting anyone in.
+
+### Movement types
+
+Stock only ever changes through a movement, each one a single DB transaction
+that updates the SKU and appends to the ledger. `available = on_hand - reserved`,
+and `on_hand` can never go below zero (enforced in code *and* as SQLite CHECK
+constraints).
+
+| Type | Effect |
+|------|--------|
+| `produced`  | `on_hand += qty` — units arriving from the workshop |
+| `delivered` | `on_hand -= qty`, frees reserved units first — shipped to a client |
+| `reserve`   | `reserved += qty` — rejected if it exceeds available |
+| `release`   | `reserved -= qty` — rejected if it exceeds reserved |
+| `count`     | sets `on_hand` to a physical count; clamps reserved down to it |
+| `write_off` | `on_hand -= qty` — damaged, sample or lost |
+
+Editing a SKU deliberately **cannot** change stock levels: record a `count`
+instead, so the ledger stays the whole explanation of what is on the shelf.
+
+### Changing the staff password
+
+Generate a new hash and replace the `password_hash` value in
+`inventory/config.php`:
+
+```bash
+php -r 'echo password_hash("the-new-password", PASSWORD_DEFAULT), "\n";'
+```
+
+It takes effect immediately. Anyone already signed in keeps their session until
+they sign out — destroy `data/` sessions by restarting PHP if you need everyone
+out at once. Login is throttled to 8 attempts per 10 minutes per IP.
+
+### Backing up
+
+The database is a single SQLite file, but it runs in **WAL mode**, so recent
+writes may still be sitting in `inventory.sqlite-wal`. Copying only the
+`.sqlite` file can therefore silently lose the most recent movements. Use
+SQLite's own backup, which is consistent and safe to run while the app is in use:
+
+```bash
+sqlite3 inventory/data/inventory.sqlite ".backup '/path/to/aqua-inv-$(date +%F).sqlite'"
+```
+
+If `sqlite3` is unavailable, copy all three files together
+(`inventory.sqlite`, `-wal`, `-shm`) while nobody is writing.
+
+You can also pull a point-in-time snapshot straight from the UI with
+**Export stock CSV** and **Export movements CSV** — worth doing before any
+large stocktake.
+
+### Security notes
+
+- Single shared password, hashed with `password_hash()`; sessions are
+  HttpOnly + SameSite=Strict, and Secure over HTTPS.
+- Every write requires a CSRF token in `X-CSRF-Token`; reads require a session.
+- All SQL goes through prepared statements.
+- `data/` and `config.php` are blocked over HTTP by `inventory/.htaccess`.
+  That protection is Apache/LiteSpeed-specific — if you ever move to nginx,
+  port those rules or the database becomes downloadable.
+
+---
+
 ## Browser support
 
 Modern evergreen browsers. Uses `:has()`, IntersectionObserver,

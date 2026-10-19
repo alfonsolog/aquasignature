@@ -71,8 +71,6 @@ function db(array $config): PDO {
     if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
         fail('Cannot create the data directory.', 500, 'no_data_dir');
     }
-    $fresh = !is_file($path);
-
     try {
         $pdo = new PDO('sqlite:' . $path, null, null, [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -88,8 +86,7 @@ function db(array $config): PDO {
     $pdo->exec('PRAGMA busy_timeout = 5000');
 
     migrate($pdo);
-    if ($fresh) seed($pdo);
-    return $pdo;
+    return $pdo;   // starts empty — every SKU is entered by hand
 }
 
 function migrate(PDO $pdo): void {
@@ -129,41 +126,6 @@ function migrate(PDO $pdo): void {
         )");
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_mov_sku     ON movements(sku_id)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_mov_created ON movements(id DESC)');
-}
-
-/* Seeded from getProducts() in src/page-home.jsx. Finish names are the
- * English canonical strings; the front end maps them to i18n keys so the
- * Spanish UI shows "Natural Caribeño". Stock starts at 0 — real counts
- * get entered through the app. */
-function seed(PDO $pdo): void {
-    $rows = [
-        // code,         product,     finish,              hex,       price
-        ['AS-TRY-NAT', 'Aqua Tray', 'Caribbean Natural', '#D9C29B', 13500],
-        ['AS-TRY-SND', 'Aqua Tray', 'Sun Sand',          '#EFE3D0', 13500],
-        ['AS-TRY-OCN', 'Aqua Tray', 'Deep Ocean',        '#1A2E35', 13500],
-        ['AS-TRY-TEA', 'Aqua Tray', 'Coastal Teal',      '#3AA4AF', 13500],
-        ['AS-TRY-IVY', 'Aqua Tray', 'Salt Ivory',        '#F5EDE0', 13500],
-
-        ['AS-BOX-NAT', 'Aqua Box',  'Caribbean Natural', '#D9C29B', 17500],
-        ['AS-BOX-OCN', 'Aqua Box',  'Deep Ocean',        '#1A2E35', 17500],
-        ['AS-BOX-GRA', 'Aqua Box',  'Graphite',          '#3D4A50', 17500],
-        ['AS-BOX-IVY', 'Aqua Box',  'Salt Ivory',        '#F5EDE0', 17500],
-
-        ['AS-BAR-NAT', 'Aqua Bar',  'Caribbean Natural', '#D9C29B', 27500],
-        ['AS-BAR-OCN', 'Aqua Bar',  'Deep Ocean',        '#1A2E35', 27500],
-        ['AS-BAR-TEA', 'Aqua Bar',  'Coastal Teal',      '#3AA4AF', 27500],
-        ['AS-BAR-IVY', 'Aqua Bar',  'Salt Ivory',        '#F5EDE0', 27500],
-    ];
-    $now = now();
-    $st  = $pdo->prepare(
-        'INSERT INTO skus (code, product, finish, hex, location, list_price,
-                           reorder_point, on_hand, reserved, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?)');
-    $pdo->beginTransaction();
-    foreach ($rows as $r) {
-        $st->execute([$r[0], $r[1], $r[2], $r[3], 'Taller', $r[4], 4, $now, $now]);
-    }
-    $pdo->commit();
 }
 
 function now(): string { return gmdate('Y-m-d H:i:s'); }

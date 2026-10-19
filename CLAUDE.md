@@ -18,6 +18,7 @@ build step.
   `Marquee`, `Toast`, `SectionHead`
 - `src/page-*.jsx` — five pages
 - `src/app.jsx` — routing (hash-based), providers, root mount
+- `inventory/` — internal stock app, standalone (see README)
 
 Scripts share scope via `Object.assign(window, ...)` at the bottom of
 each file. **Do not** use ES module syntax — Babel standalone doesn't
@@ -40,6 +41,10 @@ type="text/babel">` file and assign to `window`.
 - Two CSS files only — `styles.css` and the bundled component CSS
   inside `tweaks-panel.jsx`. Keep new styles in `styles.css` near
   related rules.
+- The one exception is `inventory/`, a standalone internal app that
+  deliberately shares nothing with the site (own CSS, own dictionary,
+  own language key). Do not wire it back into `src/` or `styles.css`;
+  see the Inventory section of README.md.
 
 ## Adding a new page
 

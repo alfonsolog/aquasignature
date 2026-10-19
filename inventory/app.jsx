@@ -6,24 +6,11 @@
  * globals are published via Object.assign at the bottom, as elsewhere.
  * ------------------------------------------------------------------ */
 
-/* React hooks come from src/components.jsx, which declares them at top
- * level — redeclaring them here would throw "already declared". */
+/* React hooks are destructured in inv-i18n.jsx, which loads first;
+ * redeclaring them here would throw "already declared". */
 
 const INV_API   = "api.php";
 const MV_TYPES  = ["produced", "delivered", "reserve", "release", "count", "write_off"];
-
-/* The DB stores canonical English finish names. Map the seeded ones onto
- * i18n keys so the Spanish UI translates them; a custom finish falls
- * through t()'s own "unknown key returns the key" behaviour and prints
- * unchanged. */
-const FINISH_KEYS = {
-  "Caribbean Natural": "color.natural",
-  "Sun Sand":          "color.sand",
-  "Deep Ocean":        "color.ocean",
-  "Coastal Teal":      "color.teal",
-  "Salt Ivory":        "color.ivory",
-  "Graphite":          "color.graphite",
-};
 
 const rd = (n) => "RD$ " + Number(n || 0).toLocaleString("en-US");
 
@@ -167,7 +154,7 @@ function InvSummary({ summary }) {
 
 function InvRow({ sku, onPick, active }) {
   const { t } = useLang();
-  const finish = t(FINISH_KEYS[sku.finish] || sku.finish);
+  const finish = sku.finish;
   return (
     <button
       className={`inv-row ${active ? "is-on" : ""} is-${sku.status}`}
@@ -359,7 +346,7 @@ function InvPanel({ sku, csrf, onClose, onChanged, onToast }) {
     }
   };
 
-  const finish = t(FINISH_KEYS[sku.finish] || sku.finish);
+  const finish = sku.finish;
 
   return (
     <aside className="inv-panel" role="dialog" aria-label={sku.code}>
@@ -555,7 +542,7 @@ function InventoryApp() {
     return skus.filter((s) => {
       if (tab && s.product !== tab) return false;
       if (!needle) return true;
-      return [s.code, s.product, s.finish, s.location, t(FINISH_KEYS[s.finish] || s.finish)]
+      return [s.code, s.product, s.finish, s.location, s.finish]
         .join(" ").toLowerCase().includes(needle);
     });
   }, [skus, tab, q, t]);
@@ -564,7 +551,7 @@ function InventoryApp() {
     const head = ["code", "product", "finish", "location", "on_hand", "reserved",
                   "available", "reorder_point", "list_price_rd", "stock_value_rd", "status"];
     const rows = shown.map((s) => [
-      s.code, s.product, t(FINISH_KEYS[s.finish] || s.finish), s.location,
+      s.code, s.product, s.finish, s.location,
       s.on_hand, s.reserved, s.available, s.reorder_point,
       s.list_price, s.on_hand * s.list_price, t(`inv.status.${s.status}`),
     ]);
@@ -576,7 +563,7 @@ function InventoryApp() {
     const head = ["when_utc", "code", "product", "finish", "type", "qty",
                   "delta_on_hand", "delta_reserved", "on_hand_after", "client_ref", "note", "by"];
     const rows = r.movements.map((m) => [
-      m.created_at, m.code, m.product, t(FINISH_KEYS[m.finish] || m.finish),
+      m.created_at, m.code, m.product, m.finish,
       t(`inv.mv.${m.type}`), m.qty, m.delta_on_hand, m.delta_reserved,
       m.on_hand_after, m.client_ref, m.note, m.user_label,
     ]);
@@ -636,7 +623,17 @@ function InventoryApp() {
           </div>
         </div>
 
-        <InvTable skus={shown} onPick={(s) => { setAdding(false); setPicked(s); }} activeId={picked && picked.id} />
+        {skus.length === 0 ? (
+          <div className="inv-first">
+            <h2>{t("inv.first.title")}</h2>
+            <p>{t("inv.first.body")}</p>
+            <button className="btn btn--primary" onClick={() => setAdding(true)}>
+              {t("inv.sku.add")} <span className="arr">→</span>
+            </button>
+          </div>
+        ) : (
+          <InvTable skus={shown} onPick={(s) => { setAdding(false); setPicked(s); }} activeId={picked && picked.id} />
+        )}
 
         <InvLog skus={skus} reloadKey={bump} />
       </main>

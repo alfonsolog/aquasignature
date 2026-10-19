@@ -166,15 +166,27 @@ A staff-only stock app at `/inventory/`. It is **not linked from the public
 nav** and carries `noindex, nofollow`. Same fonts, tokens, logo and EN/ES
 toggle as the public site; it defaults to Spanish.
 
+It is **fully standalone**: it shares no CSS, JavaScript or dictionary with
+the public site, and keeps its own language preference, so using it never
+changes what a visitor sees. The folder can be lifted to any PHP + SQLite
+host on its own.
+
 ```
 inventory/
-  index.html          — entry (loads ../src/i18n.jsx + ../src/components.jsx)
+  index.html          — entry (loads nothing from outside this folder)
   app.jsx             — the whole UI
+  inv-i18n.jsx        — its own EN/ES dictionary, Logo and LangSwitch
+  inv.css             — its own styles (brand tokens copied, not shared)
+  logo.svg            — its own copy of the droplet
   api.php             — JSON API: auth, stock, movements, SKU CRUD
   config.example.php  — copy to config.php (gitignored)
   .htaccess           — denies data/, *.sqlite and config.php over HTTP
   data/               — gitignored; SQLite lives here
 ```
+
+Because the brand tokens in `inv.css` are a copy rather than a link, a change
+to the site palette will not reach the app — update both if the brand ever
+shifts. That is the deliberate price of keeping the two independent.
 
 ### Setup
 
@@ -195,8 +207,10 @@ inventory/
    ```
 
 3. Open `http://localhost:8000/inventory/`. The first request creates
-   `inventory/data/inventory.sqlite` and seeds the 13 SKUs (Tray ×5 finishes,
-   Box ×4, Bar ×4) at **zero stock**, ready for your real counts.
+   `inventory/data/inventory.sqlite`, **empty**. Nothing is pre-loaded from the
+   website — add each SKU by hand with **Add SKU**, entering your own codes,
+   products, finishes, locations and prices. Opening stock entered on the form
+   is written to the ledger as a `count`, so every unit traces to a movement.
 
 On the live server `config.php` and `data/` are gitignored, so a `git pull`
 never overwrites them — but it also means **you must create `config.php` on the
